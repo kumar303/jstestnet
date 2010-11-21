@@ -2,4 +2,5 @@
 *.sw[po]
 pip-log.txt
 .DS_Store
-*.db
+jsci.db
+settings_local.py

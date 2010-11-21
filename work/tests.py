@@ -20,24 +20,6 @@ class TestWork(TestCase):
             datetime.now().timetuple()[0:3])
         eq_(worker.last_heartbeat, None)
 
-    def test_heartbeat(self):
-        worker = Worker()
-        worker.save()
-        worker_id = worker.id
-        r = self.client.post(reverse('work.heartbeat'),
-                    dict(worker_id=worker_id,
-                         user_agent='Mozilla/5.0 (Macintosh; U; '
-                                    'Intel Mac OS X 10.6; en-US; '
-                                    'rv:1.9.2.12) Gecko/20101026 '
-                                    'Firefox/3.6.12'))
-        eq_(r.status_code, 200)
-        worker = Worker.objects.get(pk=worker_id)
-        eq_(worker.user_agent,
-            'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; '
-            'rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
-        eq_(worker.last_heartbeat.timetuple()[0:3],
-            datetime.now().timetuple()[0:3])
-
     def test_submit_results(self):
         worker = Worker()
         worker.save()

@@ -8,13 +8,6 @@ from django.template import loader, RequestContext
 from common.decorators import json_view
 from work.models import Worker, Job, JobResult
 
-@json_view
-def heartbeat(request):
-    worker = get_object_or_404(Worker, pk=request.POST.get('worker_id', 0))
-    worker.last_heartbeat = datetime.now()
-    worker.user_agent = request.POST['user_agent']
-    worker.save()
-    return {'success':True}
 
 @json_view
 def query(request):

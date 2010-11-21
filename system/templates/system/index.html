@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>JSCI</title>
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.js"></script>
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/system.js"></script>
+</head>
+<body>
+  <h1>JSCI</h1>
+  <p>It just so happens that there are web browsers sitting around waiting to
+    run your JavaScript tests.</p>
+  <p>These browsers are currently alive and well:</p>
+  <ul>
+    {% for worker in workers %}
+    <li>{{ worker.user_agent }} [<a href="#">restart</a>]</li>
+    {% endfor %}
+  </ul>
+  <p>To add your web browser to the work pool, open this URL:
+    <a href="{% url work %}">{% url work %}</a>
+  </p>
+  <h2>Test Suites</h2>
+  <p>Here are some test suites you can run:</p>
+  <ul>
+    {% for ts in test_suites %}
+    <li>{{ ts.name }}
+      [<a class="start-tests" href="{% url system.start_tests ts.slug %}">
+                                    {% url system.start_tests ts.slug %}</a>]
+    </li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

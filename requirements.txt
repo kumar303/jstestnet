@@ -1,0 +1,6 @@
+#
+# run: 
+#   pip install -r requirements.txt
+#
+Django
+-e git+git://github.com/jbalogh/django-nose.git#egg=django-nose

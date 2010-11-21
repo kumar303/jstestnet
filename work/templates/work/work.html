@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>Test Worker</title>
+  <script type="text/javascript">
+    var WORKER_ID = {{ worker_id }};
+  </script>
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.js"></script>
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/json2.js"></script>
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/work.js"></script>
+</head>
+<body>
+  <p><strong>Status:</strong> <span id="msg">Loading...</span></p>
+  <h3>History</h3>
+  <ul id="history"></ul>
+  <div id="iframes"></div>
+</body>
+</html>

@@ -9,34 +9,34 @@
 $(document).ready(function() {
 
     var canPost = false;
-	try {
-		canPost = !!window.top.postMessage;
-	} catch(e){}
-	if (!canPost) {
-	    return;
-	}
+    try {
+        canPost = !!window.top.postMessage;
+    } catch(e){}
+    if (!canPost) {
+        return;
+    }
 
-	function postMsg(data) {
+    function postMsg(data) {
         var msg = '';
-		for (var k in data) {
-		    if (msg.length > 0) {
-		        msg += '&';
-		    }
-		    msg += k + '=' + encodeURI(data[k]);
-		}
-		window.top.postMessage(msg, '*');
-	}
+        for (var k in data) {
+            if (msg.length > 0) {
+                msg += '&';
+            }
+            msg += k + '=' + encodeURI(data[k]);
+        }
+        window.top.postMessage(msg, '*');
+    }
 
     // QUnit (jQuery)
-	// http://docs.jquery.com/QUnit
-	if ( typeof QUnit !== "undefined" ) {
+    // http://docs.jquery.com/QUnit
+    if ( typeof QUnit !== "undefined" ) {
 
-    	QUnit.begin = function() {
-    	    postMsg({
-    	        action: 'hello',
-    	        user_agent: navigator.userAgent
-    	    });
-    	};
+        QUnit.begin = function() {
+            postMsg({
+                action: 'hello',
+                user_agent: navigator.userAgent
+            });
+        };
 
         QUnit.done = function(failures, total) {
             // // Clean up the HTML (remove any un-needed test markup)
@@ -50,34 +50,34 @@ $(document).ready(function() {
 
             postMsg({
                 action: 'done',
-    			failures: failures,
-    			total: total
-    		});
-    	};
+                failures: failures,
+                total: total
+            });
+        };
 
-    	QUnit.log = function(result, message) {
-    	    // Strip out html:
+        QUnit.log = function(result, message) {
+            // Strip out html:
             message = message.replace(/<(?:.|\s)*?>/g, '');
-    	    postMsg({
-    	        action: 'log',
-    	        result: result,
-    	        message: message
-    	    });
-    	};
+            postMsg({
+                action: 'log',
+                result: result,
+                message: message
+            });
+        };
 
-    	QUnit.moduleStart = function(name) {
-    	    postMsg({
-    	        action: 'set_module',
-    	        name: name
-    	    });
-    	};
+        QUnit.moduleStart = function(name) {
+            postMsg({
+                action: 'set_module',
+                name: name
+            });
+        };
 
-    	QUnit.testStart = function(name) {
-    	    postMsg({
-    	        action: 'set_test',
-    	        name: name
-    	    });
-    	};
+        QUnit.testStart = function(name) {
+            postMsg({
+                action: 'set_test',
+                name: name
+            });
+        };
 
         // window.TestSwarm.serialize = function(){
         //  // Clean up the HTML (remove any un-needed test markup)
@@ -94,7 +94,7 @@ $(document).ready(function() {
         //
         //  return trimSerialize();
         // };
-	} else {
+    } else {
         throw new Error("Cannot adapt to jstestnet: Unknown test runner");
-	}
+    }
 });

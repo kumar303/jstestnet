@@ -15,6 +15,12 @@ class Job(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     finished = models.BooleanField(default=False)
 
+class WorkQueue(models.Model):
+    job = models.ForeignKey(Job)
+    worker = models.ForeignKey(Worker)
+    created = models.DateTimeField(auto_now_add=True)
+    received = models.BooleanField(default=False)
+
 class JobResult(models.Model):
     job = models.ForeignKey(Job)
     worker = models.ForeignKey(Worker)

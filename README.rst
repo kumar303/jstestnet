@@ -5,9 +5,9 @@ JS TestNet
 
 JS TestNet is a Django_ web service that coordinates the execution of JavaScript tests across web browsers.  It was designed to run pure JavaScript tests with Qunit_ in a CI environment like Hudson_ and to get test feedback from real web browsers.  It is probably flexible enough for other JavaScript test runners too.
 
-.. _Django:
-.. _Qunit:
-.. _Hudson:
+.. _Django: http://www.djangoproject.com/
+.. _Qunit: http://docs.jquery.com/Qunit
+.. _Hudson: http://hudson-ci.org/
 
 .. contents::
       :local:
@@ -39,9 +39,9 @@ Start the server and open the front page to see the system status.
 
   ./manage.py runserver
 
-.. _Python:
-.. _virtualenv:
-.. _pip:
+.. _Python: http://python.org/
+.. _virtualenv: http://pypi.python.org/pypi/virtualenv
+.. _pip: http://pip.openplans.org/
 
 Adding a Test Suite
 ===================
@@ -69,13 +69,13 @@ You will have to make one modification to your test suite.  It must include the 
   </body>
   </html>
 
-This is important because it enables your test suite to send results back to JS TestNet via `window.top.postMessage`_.
+This is important because it enables your test suite to send results back to JS TestNet via `window.postMessage`_.
 
 You will also need to be sure your web server is **not** sending a response header like this::
 
   X-Frame-Options: DENY
 
-.. _window.top.postMessage:
+.. _window.postMessage: https://developer.mozilla.org/en/dom/window.postmessage
 
 Adding a Web Browser
 ====================
@@ -104,8 +104,8 @@ This simple pub/sub model was inspired by jsTestDriver_, which is a great tool f
 
 JS TestNet's client side implementation was forked from TestSwarm_ which is also a similar tool.  JS TestNet is different in that it supports direct execution of tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the cross domain stuff and retry timeouts, etc :)
 
-.. _jsTestDriver:
-.. _TestSwarm:
+.. _jsTestDriver: http://code.google.com/p/js-test-driver/
+.. _TestSwarm: https://github.com/jeresig/testswarm
 
 Developers
 ==========
@@ -114,4 +114,4 @@ Hi!  Feel free to submit bugs, patches and pull requests on github_.  Here is th
 
   ./manage.py test
 
-.. _github: 
+.. _github: https://github.com/kumar303/jstestnet

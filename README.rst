@@ -15,7 +15,7 @@ JS TestNet is a Django_ web service that coordinates the execution of JavaScript
 Install
 =======
 
-First, you need Python_ 2.6 or greater.  Clone this repository, create a virtualenv_, install pip_, then cd into the project and run::
+First, you need Python_ 2.6 or greater.  Clone this repository, create a virtualenv_, then cd into the project and run::
 
   pip install -r requirements.txt
 
@@ -23,7 +23,7 @@ Make your own settings_local.py::
 
   cp settings_local.py-example settings_local.py
 
-Set up a MySQL User and enter the credentials in settings_local.py::
+Set up a MySQL user and enter the credentials in settings_local.py (if different from settings.py)::
 
   DATABASES['default']['NAME'] = 'jstestnet_dev'
   DATABASES['default']['USER'] = 'jstestnet_dev'
@@ -41,7 +41,6 @@ Start the server and open the front page to see the system status.
 
 .. _Python: http://python.org/
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv
-.. _pip: http://pip.openplans.org/
 
 Adding a Test Suite
 ===================
@@ -53,7 +52,7 @@ A test suite is a URL to an HTML page that runs tests in a web browser when load
     values
     ('Foo Test Suite','foo','http://my-dev-server/qunit/all.html');
 
-You will have to make one modification to your test suite.  It must include the jstestnet.js script, found in the adapter folder.  Be sure it loads after Qunit or whatever supported test runner you are using.
+You will have to make one modification to your test suite.  It must include the jstestnet.js script (found in the adapter folder) to communicate with the worker.  Be sure it loads after Qunit or whatever supported test runner you are using.
 
 ::
 
@@ -69,7 +68,7 @@ You will have to make one modification to your test suite.  It must include the 
   </body>
   </html>
 
-This is important because it enables your test suite to send results back to JS TestNet via `window.postMessage`_.
+This enables your test suite to send results back to JS TestNet via `window.postMessage`_.
 
 You will also need to be sure your web server is **not** sending a response header like this::
 
@@ -95,14 +94,16 @@ To start your test suite on all web browsers, just request this URL from curl or
 
   http://127.0.0.1:8000/start_tests/foo
 
-That will return a JSON response of who is working on your tests.
+That will return a JSON response of who is working on your tests.  You can check for results at::
+
+  http://127.0.0.1:8000/job/{id}/result
 
 Credits
 =======
 
 This simple pub/sub model was inspired by jsTestDriver_, which is a great tool for running very fast unit tests.  JS TestNet set out with a different goal: run any kind of JavaScript tests, especially middle-tier integration tests that do not lock down your implementation as much as unit tests.  You may want to mock out jQuery's $.ajax method and perform asynchronous Ajax calls -- go for it!
 
-JS TestNet's client side implementation was forked from TestSwarm_ which is also a similar tool.  JS TestNet is different in that it supports direct execution of tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the cross domain stuff and retry timeouts, etc :)
+JS TestNet's worker implementation was forked from TestSwarm_, which is a similar tool.  JS TestNet is different in that it supports direct execution of tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the cross domain stuff and implementing retry timeouts, error handling, etc :)
 
 .. _jsTestDriver: http://code.google.com/p/js-test-driver/
 .. _TestSwarm: https://github.com/jeresig/testswarm
@@ -115,3 +116,13 @@ Hi!  Feel free to submit bugs, patches and pull requests on github_.  Here is th
   ./manage.py test
 
 .. _github: https://github.com/kumar303/jstestnet
+
+To-Do
+=====
+
+A lot!  In fact, this is probably broken, insecure, and should be viewed as highly experimental.  Some ideas...
+
+- Create a Python client to execute tests and report results
+- Create a Nose plugin to integrate JavaScript tests into a Python test suite (and get XUnit output, etc)
+- Handle unexpected errors and test timeouts in the worker
+- Add some CSS styles

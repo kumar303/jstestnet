@@ -103,7 +103,7 @@ Credits
 
 This simple pub/sub model was inspired by jsTestDriver_, which is a great tool for running very fast unit tests.  JS TestNet set out with a different goal: run any kind of JavaScript tests, especially middle-tier integration tests that do not lock down your implementation as much as unit tests.  You may want to mock out jQuery's $.ajax method and perform asynchronous Ajax calls -- go for it!
 
-JS TestNet's worker implementation was forked from TestSwarm_, which is a similar tool.  JS TestNet is different in that it supports direct execution of tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the cross domain stuff and implementing retry timeouts, error handling, etc :)
+JS TestNet's worker implementation was forked from TestSwarm_, which is a similar tool.  JS TestNet is different in that it supports direct execution of tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the cross domain stuff and implementing retry timeouts, error handling, etc :)  Also, JS TestNet is dumber than TestSwarm in that it requires an adapter.
 
 .. _jsTestDriver: http://code.google.com/p/js-test-driver/
 .. _TestSwarm: https://github.com/jeresig/testswarm
@@ -125,4 +125,6 @@ A lot!  In fact, this is probably broken, insecure, and should be viewed as high
 - Create a Python client to execute tests and report results
 - Create a Nose plugin to integrate JavaScript tests into a Python test suite (and get XUnit output, etc)
 - Handle unexpected errors and test timeouts in the worker
+- Add some kind of secure test execution to prevent DoS.  Probably a simple token based thing.
+- Add a better way to manage test suites
 - Add some CSS styles

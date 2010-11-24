@@ -6,7 +6,7 @@
 // Be sure this file is loaded *after* qunit/testrunner.js or whatever else
 // you're using
 
-$(document).ready(function() {
+(function() {
 
     var canPost = false;
     try {
@@ -97,4 +97,5 @@ $(document).ready(function() {
     } else {
         throw new Error("Cannot adapt to jstestnet: Unknown test runner");
     }
-});
+
+})();

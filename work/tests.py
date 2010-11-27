@@ -46,6 +46,29 @@ class TestWork(TestCase):
         eq_(res.finished, True)
         eq_(res.results, json.dumps(results))
 
+    def test_submit_error_results(self):
+        worker = Worker()
+        worker.save()
+        ts = TestSuite(name='Zamboni', slug='zamboni',
+                       url='http://server/qunit1.html')
+        ts.save()
+        job = Job(test_suite=ts)
+        job.save()
+        res = JobResult(job=job, worker=worker)
+        res.save()
+        results = {
+            'job_error': True,
+            'job_error_msg': 'Timed out waiting for test results'
+        }
+        r = self.client.post(reverse('work.submit_results'),
+                             dict(job_result_id=res.id,
+                                  results=json.dumps(results)))
+        eq_(r.status_code, 200)
+
+        res = JobResult.objects.get(job=job, worker=worker)
+        eq_(res.finished, True)
+        eq_(res.results, json.dumps(results))
+
     def test_query(self):
         user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
                       'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')

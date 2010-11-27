@@ -4,77 +4,77 @@
 
 var updateRate = 10, timeoutRate = 180,
     testTimeout, pauseTimer, testResults = {},
-    currentJobId;
+    jobResultId;
 
 jQuery( doWork );
 
 if ( window.addEventListener ) {
-	window.addEventListener( "message", handleMessage, false );
+    window.addEventListener( "message", handleMessage, false );
 } else if ( window.attachEvent ) {
-	window.attachEvent( "onmessage", handleMessage );
+    window.attachEvent( "onmessage", handleMessage );
 }
 
 var cmds = {
     run_test: function(params) {
         testResults = {};
-        currentJobId = params.job_result_id;
+        jobResultId = params.job_result_id;
         log("Running: " +
             params.name + " at " + params.url +
-            " [" + currentJobId.toString() + "]");
+            " [" + jobResultId.toString() + "]");
 
-		var iframe = document.createElement("iframe");
-		iframe.width = 1000;
-		iframe.height = 600;
-		iframe.className = "test";
-		iframe.src = params.url + '?_=' + (new Date).getTime();
-		jQuery("#iframes").append( iframe );
+        var iframe = document.createElement("iframe");
+        iframe.width = 1000;
+        iframe.height = 600;
+        iframe.className = "test";
+        iframe.src = params.url + '?_=' + (new Date).getTime();
+        jQuery("#iframes").append( iframe );
 
-		// The iframe must communicate back to us
-		// with window.top.postMessage.
-		// See handleMessage() for how those are received.
+        // The iframe must communicate back to us
+        // with window.top.postMessage.
+        // See handleMessage() for how those are received.
 
-		// Timeout after a period of time
-		testTimeout = setTimeout( testTimedout, timeoutRate * 1000 );
+        // Timeout after a period of time
+        testTimeout = setTimeout( testTimedout, timeoutRate * 1000 );
     },
-	reload: function() {
-		window.location.reload();
-	},
-	rate: function( num ) {
-		updateRate = parseInt( num );
-	}
+    reload: function() {
+        window.location.reload();
+    },
+    rate: function( num ) {
+        updateRate = parseInt( num );
+    }
 };
 
 function doWork() {
-    currentJobId = null;
-	msg("Getting work from server...");
-	retrySend("/work/query",
-	          {worker_id: WORKER_ID, user_agent: navigator.userAgent},
-	          doWork, doServerCmd);
+    jobResultId = null;
+    msg("Getting work from server...");
+    retrySend("/work/query",
+              {worker_id: WORKER_ID, user_agent: navigator.userAgent},
+              doWork, doServerCmd);
 }
 
 function doServerCmd( data ) {
-	if ( data.cmd ) {
-		if ( typeof cmds[ data.cmd ] === "function" ) {
-			cmds[ data.cmd ].apply( cmds, data.args );
-		}
-	} else {
-		clearTimeout( pauseTimer );
+    if ( data.cmd ) {
+        if ( typeof cmds[ data.cmd ] === "function" ) {
+            cmds[ data.cmd ].apply( cmds, data.args );
+        }
+    } else {
+        clearTimeout( pauseTimer );
 
-		var run_msg = data.desc || "No command from server.";
+        var run_msg = data.desc || "No command from server.";
 
-		msg(run_msg);
+        msg(run_msg);
 
-		var timeLeft = updateRate;
+        var timeLeft = updateRate;
 
-		pauseTimer = setTimeout(function leftTimer(){
-			msg(run_msg + " Checking again in " + timeLeft + " seconds.");
-			if ( timeLeft-- >= 1 ) {
-				pauseTimer = setTimeout( leftTimer, 1000 );
-			} else {
-				doWork();
-			}
-		}, 1000);
-	}
+        pauseTimer = setTimeout(function leftTimer(){
+            msg(run_msg + " Checking again in " + timeLeft + " seconds.");
+            if ( timeLeft-- >= 1 ) {
+                pauseTimer = setTimeout( leftTimer, 1000 );
+            } else {
+                doWork();
+            }
+        }, 1000);
+    }
 }
 
 function done() {
@@ -83,20 +83,26 @@ function done() {
 }
 
 function cancelTest() {
-	if ( testTimeout ) {
-		clearTimeout( testTimeout );
-		testTimeout = 0;
-	}
+    if ( testTimeout ) {
+        clearTimeout( testTimeout );
+        testTimeout = 0;
+    }
 
-	jQuery("iframe").remove();
+    jQuery("iframe").remove();
 }
 
 function testTimedout() {
-	cancelTest();
-	// TODO(kumar)
-	retrySend( "state=saverun&fail=-1&total=-1&results=Test%20Timed%20Out.&run_id="
-		+ run_id + "&client_id=" + client_id,
-		testTimedout, doWork );
+    cancelTest();
+    var msg = {
+        job_error: true,
+        job_error_msg: 'Timed out waiting for test results'
+    }
+    log(msg.job_error_msg);
+    retrySend('/work/submit_results', {
+            job_result_id: jobResultId,
+            results: JSON.stringify(msg)
+        },
+        testTimedout, doWork );
 }
 
 function parseQueryStr(qs) {
@@ -138,7 +144,7 @@ function handleMessage(msg){
             testResults.total = parseInt(obj.total, 10);
             // console.log(testResults);
             retrySend( '/work/submit_results',
-                        {job_result_id: currentJobId,
+                        {job_result_id: jobResultId,
                          results: JSON.stringify(testResults)},
                         function() {
                             handleMessage(msg);
@@ -153,38 +159,38 @@ function handleMessage(msg){
 var errorOut = 0;
 
 function retrySend( url, data, retry, success ) {
-	jQuery.ajax({
-		type: "POST",
-		url: url,
-		timeout: 10000,
-		cache: false,
-		data: data,
-		error: function() {
-			if ( errorOut++ > 4 ) {
-				cmds.reload();
-			} else {
-				msg("Error connecting to server, retrying...");
-				setTimeout( retry, 15000 );
-			}
-		},
-		success: function(){
-			errorOut = 0;
+    jQuery.ajax({
+        type: "POST",
+        url: url,
+        timeout: 10000,
+        cache: false,
+        data: data,
+        error: function() {
+            if ( errorOut++ > 4 ) {
+                cmds.reload();
+            } else {
+                msg("Error connecting to server, retrying...");
+                setTimeout( retry, 15000 );
+            }
+        },
+        success: function(){
+            errorOut = 0;
             msg("Sent data to server successfully");
-			success.apply( this, arguments );
-		},
-		dataType: 'json'
-	});
+            success.apply( this, arguments );
+        },
+        dataType: 'json'
+    });
 }
 
 function log( txt ) {
-	jQuery("#history").prepend( "<li><strong>" +
-		(new Date).toString().replace(/^\w+ /, "").replace(/:[^:]+$/, "") +
-		":</strong> " + txt + "</li>" );
-	msg( txt );
+    jQuery("#history").prepend( "<li><strong>" +
+        (new Date).toString().replace(/^\w+ /, "").replace(/:[^:]+$/, "") +
+        ":</strong> " + txt + "</li>" );
+    msg( txt );
 }
 
 function msg( txt ) {
-	jQuery("#msg").html( txt );
+    jQuery("#msg").html( txt );
 }
 
 })();

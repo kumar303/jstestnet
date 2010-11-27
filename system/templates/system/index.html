@@ -1,12 +1,13 @@
-<!DOCTYPE html>
-<html lang="en-US">
-<head>
-  <title>JSCI</title>
+{% extends "base.html" %}
+
+{% block head %}
   <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.js"></script>
   <script type="text/javascript" src="{{ MEDIA_URL }}js/system.js"></script>
-</head>
-<body>
-  <h1>JSCI</h1>
+{% endblock %}
+
+{% block content %}
+
+  <h1>JS TestNet</h1>
   <p>It just so happens that there are web browsers sitting around waiting to
     run your JavaScript tests.</p>
   <p>These browsers are currently alive and well:</p>
@@ -28,5 +29,5 @@
     </li>
     {% endfor %}
   </ul>
-</body>
-</html>
+
+{% endblock %}

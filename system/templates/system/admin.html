@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block head %}
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.js"></script>
+  <script type="text/javascript" src="{{ MEDIA_URL }}js/system.js"></script>
+{% endblock %}
+
+{% block content %}
+
+{% if test_suite %}
+  <form action="{% url system.create_edit_test_suite test_suite.id %}" method="post">
+{% else %}
+  <form action="{% url system.create_edit_test_suite %}" method="post">
+{% endif %}
+<table>
+{{ form.as_table }}
+{% csrf_token %}
+</table>
+<input type="submit" value="Create new test suite" />
+</form>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Slug</th>
+    <th>URL</th>
+    <th>Actions</th>
+  </tr>
+{% for ts in test_suites %}
+  <tr>
+    <th>{{ ts.name }}</th>
+    <th>{{ ts.slug }}</th>
+    <th><a href="{{ ts.url }}">{{ ts.url }}</a></th>
+    <th><a href="{% url system.edit_test_suite ts.id %}">[edit]</a>
+        <a href="{% url system.delete_test_suite ts.id %}">[delete]</a></th>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock %}

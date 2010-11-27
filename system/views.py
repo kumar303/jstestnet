@@ -1,13 +1,55 @@
 
 import json
 
+from django import http
+from django.core.urlresolvers import reverse
+from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 
-from common.decorators import json_view
 from system.models import TestSuite
+from system.forms import TestSuiteForm
+from common.decorators import json_view
 from work.models import Worker, WorkQueue, Job, JobResult
+
+
+@staff_member_required
+def test_suites(request, test_suite_id=None, form=None):
+    test_suites = TestSuite.objects.all().order_by('slug')
+    test_suite = get_object_or_404(
+                    TestSuite, pk=test_suite_id) if test_suite_id else None
+    if not form:
+        form = TestSuiteForm(instance=test_suite)
+    return render_to_response('system/admin.html', dict(
+                test_suites=test_suites,
+                form=form,
+                test_suite=test_suite
+            ),
+            context_instance=RequestContext(request))
+
+
+@staff_member_required
+def create_edit_test_suite(request, test_suite_id=None):
+    test_suite = get_object_or_404(
+                    TestSuite, pk=test_suite_id) if test_suite_id else None
+    if request.POST:
+        attr = request.POST.copy()
+        form = TestSuiteForm(attr, instance=test_suite)
+        if form.is_valid():
+            form.save()
+            return http.HttpResponseRedirect(reverse('system.test_suites'))
+        else:
+            return test_suites(form=form)
+    else:
+        return http.HttpResponseBadRequest()
+
+
+@staff_member_required
+def delete_test_suite(request, pk):
+    ts = get_object_or_404(TestSuite, pk=pk)
+    ts.delete()
+    return http.HttpResponseRedirect(reverse('system.test_suites'))
 
 
 @json_view

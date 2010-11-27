@@ -11,6 +11,7 @@ from django.template import loader, RequestContext
 from system.models import TestSuite
 from system.forms import TestSuiteForm
 from common.decorators import json_view
+import work.views
 from work.models import Worker, WorkQueue, Job, JobResult
 
 
@@ -84,6 +85,7 @@ def start_tests(request, name):
 
 
 def status(request):
+    work.views.collect_garbage()
     return render_to_response('system/index.html', dict(
                 workers=Worker.objects.filter(is_alive=True),
                 test_suites=TestSuite.objects.all().order_by('name')

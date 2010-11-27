@@ -10,6 +10,16 @@ from common.decorators import json_view
 from work.models import Worker, WorkQueue, Job, JobResult
 
 
+def collect_garbage():
+    # Reap unresponsive workers:
+    Worker.objects.filter(
+            last_heartbeat__lt=datetime.now()-timedelta(seconds=30)).delete()
+    # Clear out the work queue:
+    WorkQueue.objects.filter(received=True).delete()
+    # Delete old jobs:
+    Job.objects.filter(created__lt=datetime.now()-timedelta(hours=2)).delete()
+
+
 @json_view
 @transaction.commit_on_success()
 def query(request):
@@ -17,13 +27,7 @@ def query(request):
     worker.last_heartbeat = datetime.now()
     worker.user_agent = request.POST['user_agent']
     worker.save()
-    # Reap old workers:
-    Worker.objects.filter(
-            last_heartbeat__lt=datetime.now()-timedelta(minutes=5)).delete()
-    # Clear out the work queue:
-    WorkQueue.objects.filter(received=True).delete()
-    # Delete old jobs:
-    Job.objects.filter(created__lt=datetime.now()-timedelta(hours=2)).delete()
+    collect_garbage()
     # Look for work, FIFO:
     queue = (WorkQueue.objects
                       .filter(worker=worker, received=False)
@@ -60,6 +64,7 @@ def submit_results(request):
 
 
 def work(request):
+    collect_garbage()
     worker = Worker()
     worker.save()
     return render_to_response('work/work.html',

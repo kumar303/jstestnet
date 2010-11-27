@@ -16,7 +16,11 @@
 {{ form.as_table }}
 {% csrf_token %}
 </table>
-<input type="submit" value="Create new test suite" />
+{% if test_suite %}
+  <input type="submit" value="Edit test suite" />
+{% else %}
+  <input type="submit" value="Create new test suite" />
+{% endif %}
 </form>
 
 <table>

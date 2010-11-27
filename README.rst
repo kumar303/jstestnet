@@ -3,7 +3,11 @@
 JS TestNet
 ==========
 
-JS TestNet is a Django_ web service that coordinates the execution of JavaScript tests across web browsers.  It was designed to run pure JavaScript tests with Qunit_ in a CI environment like Hudson_ and to get test feedback from real web browsers.  It is probably flexible enough for other JavaScript test runners too.
+JS TestNet is a Django_ web service that coordinates the execution of
+JavaScript tests across web browsers.  It was designed to run pure JavaScript
+tests with Qunit_ in a CI environment like Hudson_ and to get test feedback
+from real web browsers.  It is probably flexible enough for other JavaScript
+test runners too.
 
 .. _Django: http://www.djangoproject.com/
 .. _Qunit: http://docs.jquery.com/Qunit
@@ -15,7 +19,8 @@ JS TestNet is a Django_ web service that coordinates the execution of JavaScript
 Install
 =======
 
-First, you need Python_ 2.6 or greater.  Clone this repository, create a virtualenv_, then cd into the project and run::
+First, you need Python_ 2.6 or greater.  Clone this repository, create a
+virtualenv_, then cd into the project and run::
 
   pip install -r requirements.txt
 
@@ -45,14 +50,14 @@ Start the server and open the front page to see the system status.
 Adding a Test Suite
 ===================
 
-A test suite is a URL to an HTML page that runs tests in a web browser when loaded.  Make it accessible to JS TestNet like this in a mysql shell::
+A test suite is a URL to an HTML page that runs tests in a web browser when
+loaded.  The front page of the JS TestNet app links to a form where an
+administrator can add a test suite into the system.
 
-  insert into system_testsuite
-    (name, slug, url)
-    values
-    ('Foo Test Suite','foo','http://my-dev-server/qunit/all.html');
-
-You will have to make one modification to your test suite.  It must include the jstestnet.js script (found in the adapter folder) to communicate with the worker.  Be sure it loads after Qunit or whatever supported test runner you are using.
+You will have to make one modification to your test suite.  It must include
+the jstestnet.js script (found in the adapter folder) to communicate with the
+worker.  Be sure it loads after Qunit or whatever supported test runner you
+are using.
 
 ::
 
@@ -68,9 +73,11 @@ You will have to make one modification to your test suite.  It must include the 
   </body>
   </html>
 
-This enables your test suite to send results back to JS TestNet via `window.postMessage`_.
+This enables your test suite to send results back to JS TestNet via
+`window.postMessage`_.
 
-You will also need to be sure your web server is **not** sending a response header like this::
+You will also need to be sure your web server is **not** sending a response
+header like this::
 
   X-Frame-Options: DENY
 
@@ -79,31 +86,47 @@ You will also need to be sure your web server is **not** sending a response head
 Adding a Web Browser
 ====================
 
-To register a web browser to run the tests (called a worker) just open the browser and go to this URL and leave the window open::
+To register a web browser to run the tests (called a worker) just open the
+browser and go to this URL and leave the window open::
 
   http://127.0.0.1:8000/work/
 
-The worker will be able to run tests for as long as you keep that window open.  In a CI environment you probably want to open this once in a virtual machine and forget all about it.
+The worker will be able to run tests for as long as you keep that window open.
+In a CI environment you probably want to open this once in a virtual machine
+and forget all about it.
 
-You can open this URL on any web enabled device and it will automatically join the work pool.  For example, you could type this URL into your smart phone and your phone would become a worker.
+You can open this URL on any web enabled device and it will automatically join
+the work pool.  For example, you could type this URL into your smart phone and
+your phone would become a worker.
 
 Running Tests
 =============
 
-To start your test suite on all web browsers, just request this URL from curl or a custom script (more on that later)::
+To start your test suite on all web browsers, just request this URL from curl
+or a custom script (more on that later)::
 
   http://127.0.0.1:8000/start_tests/foo
 
-That will return a JSON response of who is working on your tests.  You can check for results at::
+That will return a JSON response of who is working on your tests.  You can
+check for results at::
 
   http://127.0.0.1:8000/job/{id}/result
 
 Credits
 =======
 
-This simple pub/sub model was inspired by jsTestDriver_, which is a great tool for running very fast unit tests.  JS TestNet set out with a different goal: run any kind of JavaScript tests, especially middle-tier integration tests that do not lock down your implementation as much as unit tests.  You may want to mock out jQuery's $.ajax method and perform asynchronous Ajax calls -- go for it!
+This simple pub/sub model was inspired by jsTestDriver_, which is a great tool
+for running very fast unit tests.  JS TestNet set out with a different goal:
+run any kind of JavaScript tests, especially middle-tier integration tests
+that do not lock down your implementation as much as unit tests.  You may want
+to mock out jQuery's $.ajax method and perform asynchronous Ajax calls -- go
+for it!
 
-JS TestNet's worker implementation was forked from TestSwarm_, which is a similar tool.  JS TestNet is different in that it supports direct execution of tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the cross domain stuff and implementing retry timeouts, error handling, etc :)  Also, JS TestNet is dumber than TestSwarm in that it requires an adapter.
+JS TestNet's worker implementation was forked from TestSwarm_, which is a
+similar tool.  JS TestNet is different in that it supports direct execution of
+tests suitable for CI.  Big thanks to John Resig for figuring out a lot of the
+cross domain stuff and implementing retry timeouts, error handling, etc :)
+Also, JS TestNet is dumber than TestSwarm in that it requires an adapter.
 
 .. _jsTestDriver: http://code.google.com/p/js-test-driver/
 .. _TestSwarm: https://github.com/jeresig/testswarm
@@ -111,7 +134,8 @@ JS TestNet's worker implementation was forked from TestSwarm_, which is a simila
 Developers
 ==========
 
-Hi!  Feel free to submit bugs, patches and pull requests on github_.  Here is the command to run the test suite::
+Hi!  Feel free to submit bugs, patches and pull requests on github_.  Here is
+the command to run the test suite::
 
   ./manage.py test
 
@@ -120,11 +144,14 @@ Hi!  Feel free to submit bugs, patches and pull requests on github_.  Here is th
 To-Do
 =====
 
-A lot!  In fact, this is probably broken, insecure, and should be viewed as highly experimental.  Some ideas...
+A lot!  In fact, this is probably broken, insecure, and should be viewed as
+highly experimental.  Some ideas...
 
 - Create a Python client to execute tests and report results
-- Create a Nose plugin to integrate JavaScript tests into a Python test suite (and get XUnit output, etc)
+- Create a Nose plugin to integrate JavaScript tests into a Python test suite
+  (and get XUnit output, etc)
 - Handle unexpected errors and test timeouts in the worker
-- Add some kind of secure test execution to prevent DoS.  Probably a simple token based thing.
+- Add some kind of secure test execution to prevent DoS.  Probably a simple
+  token based thing.
 - Add a better way to manage test suites
 - Add some CSS styles

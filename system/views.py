@@ -12,7 +12,7 @@ from system.models import TestSuite
 from system.forms import TestSuiteForm
 from common.decorators import json_view
 import work.views
-from work.models import Worker, WorkQueue, Job, JobResult
+from work.models import Worker, WorkQueue, TestRun, TestRunQueue
 
 
 @staff_member_required
@@ -54,16 +54,17 @@ def delete_test_suite(request, pk):
 
 
 @json_view
-def job_result(request, job_id):
-    job = get_object_or_404(Job, pk=job_id)
+def test_result(request, test_run_id):
+    test_run = get_object_or_404(TestRun, pk=test_run_id)
     results = []
-    for res in JobResult.objects.filter(job=job, finished=True):
+    for tq in TestRunQueue.objects.filter(test_run=test_run,
+                                          work_queue__finished=True):
         results.append({
-            'worker_id': res.worker.id,
-            'user_agent': res.worker.user_agent,
-            'results': json.loads(res.results)
+            'worker_id': tq.work_queue.worker.id,
+            'user_agent': tq.work_queue.worker.user_agent,
+            'results': json.loads(tq.work_queue.results)
         })
-    return {'finished': job.finished, 'results': results}
+    return {'finished': test_run.is_finished(), 'results': results}
 
 
 @json_view
@@ -71,15 +72,15 @@ def job_result(request, job_id):
 def start_tests(request, name):
     ts = get_object_or_404(TestSuite, slug=name)
     # TODO(kumar) don't start a test suite if it's already running.
-    job = Job(test_suite=ts)
-    job.save()
+    test = TestRun(test_suite=ts)
+    test.save()
     workers = []
     for worker in Worker.objects.filter(is_alive=True):
         # TODO(kumar) add options to ignore workers for
         # unwanted browsers perhaps?
-        WorkQueue(worker=worker, job=job).save()
+        worker.run_test(test)
         workers.append(worker)
-    return {'job_id': job.id,
+    return {'test_run_id': test.id,
             'workers': [{'worker_id': w.id, 'user_agent': w.user_agent}
                          for w in workers]}
 

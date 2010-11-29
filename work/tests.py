@@ -7,7 +7,7 @@ from django.test import TestCase
 from nose.tools import eq_
 
 from system.models import TestSuite
-from work.models import Worker, Job, JobResult
+from work.models import Worker, TestRun, WorkQueue
 
 class TestWork(TestCase):
 
@@ -20,56 +20,34 @@ class TestWork(TestCase):
             datetime.now().timetuple()[0:3])
         eq_(worker.last_heartbeat, None)
 
-    def test_submit_results(self):
-        worker = Worker()
-        worker.save()
-        ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://server/qunit1.html')
-        ts.save()
-        job = Job(test_suite=ts)
-        job.save()
-        res = JobResult(job=job, worker=worker)
-        res.save()
-        results = {
-            'failures': 0,
-            'total': 1,
-            'tests': [{'test':'foo','message':'1 equals 2'}]
-        }
-        r = self.client.post(reverse('work.submit_results'),
-                             dict(job_result_id=res.id,
-                                  results=json.dumps(results)))
-        eq_(r.status_code, 200)
-        data = json.loads(r.content)
-        eq_(data['desc'], 'Test result received')
-
-        res = JobResult.objects.get(job=job, worker=worker)
-        eq_(res.finished, True)
-        eq_(res.results, json.dumps(results))
-
     def test_submit_error_results(self):
         worker = Worker()
         worker.save()
         ts = TestSuite(name='Zamboni', slug='zamboni',
                        url='http://server/qunit1.html')
         ts.save()
-        job = Job(test_suite=ts)
-        job.save()
-        res = JobResult(job=job, worker=worker)
-        res.save()
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']))
+        eq_(r.status_code, 200)
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=worker.id,
+                                  user_agent='<user agent>'))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+
         results = {
-            'job_error': True,
-            'job_error_msg': 'Timed out waiting for test results'
+            'test_run_error': True,
+            'test_run_error_msg': 'Timed out waiting for test results'
         }
         r = self.client.post(reverse('work.submit_results'),
-                             dict(job_result_id=res.id,
+                             dict(work_queue_id=data['work_queue_id'],
                                   results=json.dumps(results)))
         eq_(r.status_code, 200)
 
-        res = JobResult.objects.get(job=job, worker=worker)
-        eq_(res.finished, True)
-        eq_(res.results, json.dumps(results))
+        q = WorkQueue.objects.get(pk=data['work_queue_id'])
+        eq_(q.finished, True)
+        eq_(q.results, json.dumps(results))
 
-    def test_query(self):
+    def test_work(self):
         user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
                       'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
         worker = Worker()
@@ -83,7 +61,7 @@ class TestWork(TestCase):
                              dict(worker_id=worker.id, user_agent=user_agent))
         eq_(r.status_code, 200)
         data = json.loads(r.content)
-        eq_(data['desc'], 'No jobs to run.')
+        eq_(data['desc'], 'No commands from server.')
 
         # Simulate Hudson requesting a job:
         r = self.client.get(reverse('system.start_tests', args=[ts.slug]))
@@ -94,24 +72,42 @@ class TestWork(TestCase):
                              dict(worker_id=worker.id, user_agent=user_agent))
         eq_(r.status_code, 200)
         data = json.loads(r.content)
-        if 'cmd' not in data:
-            assert False, "Unexpected: %r" % data
-        res = JobResult.objects.get(pk=data['args'][0]['job_result_id'])
+
+        eq_(data['cmd'], 'run_test')
         eq_(data['args'][0]['url'], ts.url)
         eq_(data['args'][0]['name'], ts.name)
-        eq_(res.worker.id, worker.id)
-        eq_(res.finished, False)
-        eq_(data['cmd'], 'run_test')
-        eq_(res.worker.last_heartbeat.timetuple()[0:3],
-            datetime.now().timetuple()[0:3])
-        eq_(res.worker.user_agent, user_agent)
+        work_queue_id = data['args'][0]['work_queue_id']
 
-        res.finished = True
-        res.save()
+        queue = WorkQueue.objects.get(pk=work_queue_id)
+        eq_(queue.worker.id, worker.id)
+        eq_(queue.finished, False)
+        eq_(queue.results, None)
+        eq_(queue.results_received, False)
+        eq_(queue.worker.last_heartbeat.timetuple()[0:3],
+            datetime.now().timetuple()[0:3])
+        eq_(queue.worker.user_agent, user_agent)
+
+        results = {
+            'failures': 0,
+            'total': 1,
+            'tests': [{'test':'foo','message':'1 equals 2'}]
+        }
+        r = self.client.post(reverse('work.submit_results'),
+                             dict(work_queue_id=queue.id,
+                                  results=json.dumps(results)))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        eq_(data['desc'], 'Test result received')
+
+        # Refresh from db...
+        queue = WorkQueue.objects.get(pk=queue.id)
+        eq_(queue.finished, True)
+        eq_(queue.results, json.dumps(results))
+        eq_(queue.results_received, False)
 
         # Cannot fetch more work.
         r = self.client.post(reverse('work.query'),
                              dict(worker_id=worker.id, user_agent=user_agent))
         eq_(r.status_code, 200)
         data = json.loads(r.content)
-        eq_(data['desc'], 'No jobs to run.')
+        eq_(data['desc'], 'No commands from server.')

@@ -10,7 +10,7 @@ from nose.tools import eq_
 
 from common.testutils import no_form_errors
 from system.models import TestSuite
-from work.models import Job, JobResult, Worker
+from work.models import TestRun, TestRunQueue, WorkQueue, Worker
 
 class TestSystem(TestCase):
 
@@ -18,53 +18,48 @@ class TestSystem(TestCase):
         r = self.client.get(reverse('system.status'))
         eq_(r.status_code, 200)
 
-    def test_start_tests(self):
-        TestSuite(name='Zamboni', slug='zamboni',
-                  url='http://server/qunit1.html').save()
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']))
-        eq_(r.status_code, 200)
-        data = json.loads(r.content)
-        q = Job.objects.all()
-        eq_(q.count(), 1)
-        job = q[0]
-        eq_(job.test_suite.slug, 'zamboni')
-        eq_(job.created.timetuple()[0:3], datetime.now().timetuple()[0:3])
-        eq_(job.finished, False)
-        eq_(data['job_id'], job.id)
-
     def test_get_job_result(self):
         ts = TestSuite(name='Zamboni', slug='zamboni',
                        url='http://server/qunit1.html')
         ts.save()
-        job = Job(test_suite=ts)
-        job.save()
-        r = self.client.get(reverse('system.job_result', args=[job.id]))
+        worker = Worker(user_agent='Mozilla/5.0 (Macintosh; U; etc...')
+        worker.save()
+
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        test_run_id = data['test_run_id']
+
+        r = self.client.get(reverse('system.test_result', args=[test_run_id]))
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         eq_(data['finished'], False)
         eq_(data['results'], [])
 
-        job.finished = True
-        job.save()
-        worker = Worker(user_agent='Mozilla/5.0 (Macintosh; U; etc...')
-        worker.save()
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=worker.id,
+                                  user_agent=worker.user_agent))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        queue_id = data['work_queue_id']
+
         results = {
             'failures': 0,
             'total': 1,
             'tests': [{'test':'foo','message':'1 equals 2'}]
         }
-        JobResult(job=job, worker=worker, finished=True,
-                  results=json.dumps(results)).save()
+        r = self.client.post(reverse('work.submit_results'),
+                             dict(work_queue_id=queue_id,
+                                  results=json.dumps(results)))
+        eq_(r.status_code, 200)
 
-        r = self.client.get(reverse('system.job_result', args=[job.id]))
+        r = self.client.get(reverse('system.test_result', args=[test_run_id]))
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         eq_(data['finished'], True)
-        eq_(data['results'], [{
-            'worker_id': worker.id,
-            'user_agent': worker.user_agent,
-            'results': results
-        }])
+        eq_(data['results'][0]['worker_id'], worker.id)
+        eq_(data['results'][0]['user_agent'], worker.user_agent)
+        eq_(data['results'][0]['results'], results)
 
 
 class TestSystemAdmin(TestCase):

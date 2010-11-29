@@ -7,7 +7,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 
 from common.decorators import json_view
-from work.models import Worker, WorkQueue, Job, JobResult
+from work.models import Worker, WorkQueue, TestRun
 
 
 def collect_garbage():
@@ -15,9 +15,7 @@ def collect_garbage():
     Worker.objects.filter(
             last_heartbeat__lt=datetime.now()-timedelta(seconds=30)).delete()
     # Clear out the work queue:
-    WorkQueue.objects.filter(received=True).delete()
-    # Delete old jobs:
-    Job.objects.filter(created__lt=datetime.now()-timedelta(hours=2)).delete()
+    WorkQueue.objects.filter(finished=True, results_received=True).delete()
 
 
 @json_view
@@ -30,34 +28,35 @@ def query(request):
     collect_garbage()
     # Look for work, FIFO:
     queue = (WorkQueue.objects
-                      .filter(worker=worker, received=False)
+                      .filter(worker=worker, work_received=False)
                       .order_by('created'))
     if not queue.count():
-        return {'desc': 'No jobs to run.'}
-    # TODO(kumar) check for other messages to send the worker,
-    # like force reloading, etc
+        return {'desc': 'No commands from server.'}
     q = queue[0]
-    q.received = True
+    q.work_received = True
     q.save()
-    job = q.job
-    res = JobResult(job=job, worker=worker)
-    res.save()
+    args = json.loads(q.cmd_args)
+    if len(args):
+        # Always patch in the work_queue_id because
+        # this is awkward to generate when the arg packet is
+        # generated.
+        args[0]['work_queue_id'] = q.id
     return {
-        'cmd':'run_test',
-        'desc': 'Here is a job to run.',
-        'args': [{'job_result_id': res.id,
-                  'url': job.test_suite.url,
-                  'name': job.test_suite.name}]
+        'work_queue_id': q.id,
+        'cmd': q.cmd,
+        'desc': q.description,
+        'args': args
     }
 
 
 @json_view
+@transaction.commit_on_success()
 def submit_results(request):
-    res = get_object_or_404(JobResult,
-                            pk=request.POST.get('job_result_id', 0))
-    res.results = request.POST['results']
-    res.finished = True
-    res.save()
+    q = get_object_or_404(WorkQueue,
+                          pk=request.POST.get('work_queue_id', 0))
+    q.finished = True
+    q.results = request.POST['results']
+    q.save()
     return {
         'desc': 'Test result received'
     }

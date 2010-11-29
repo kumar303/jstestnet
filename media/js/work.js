@@ -4,7 +4,7 @@
 
 var updateRate = 10, timeoutRate = 180,
     testTimeout, pauseTimer, testResults = {},
-    jobResultId;
+    workQueueId;
 
 jQuery( doWork );
 
@@ -17,10 +17,10 @@ if ( window.addEventListener ) {
 var cmds = {
     run_test: function(params) {
         testResults = {};
-        jobResultId = params.job_result_id;
+        workQueueId = params.work_queue_id;
         log("Running: " +
             params.name + " at " + params.url +
-            " [" + jobResultId.toString() + "]");
+            " [" + workQueueId.toString() + "]");
 
         var iframe = document.createElement("iframe");
         iframe.width = 1000;
@@ -39,23 +39,25 @@ var cmds = {
     reload: function() {
         window.location.reload();
     },
-    rate: function( num ) {
+    change_rate: function( num ) {
         updateRate = parseInt( num );
     }
 };
 
 function doWork() {
-    jobResultId = null;
+    workQueueId = null;
     msg("Getting work from server...");
     retrySend("/work/query",
               {worker_id: WORKER_ID, user_agent: navigator.userAgent},
-              doWork, doServerCmd);
+               doWork, doServerCmd);
 }
 
 function doServerCmd( data ) {
     if ( data.cmd ) {
         if ( typeof cmds[ data.cmd ] === "function" ) {
             cmds[ data.cmd ].apply( cmds, data.args );
+        } else {
+            log("Received an unknown command: " + data.cmd);
         }
     } else {
         clearTimeout( pauseTimer );
@@ -94,12 +96,12 @@ function cancelTest() {
 function testTimedout() {
     cancelTest();
     var msg = {
-        job_error: true,
-        job_error_msg: 'Timed out waiting for test results'
+        test_run_error: true,
+        test_run_error_msg: 'Timed out waiting for test results'
     }
     log(msg.job_error_msg);
     retrySend('/work/submit_results', {
-            job_result_id: jobResultId,
+            work_queue_id: workQueueId,
             results: JSON.stringify(msg)
         },
         testTimedout, doWork );
@@ -142,9 +144,8 @@ function handleMessage(msg){
             log("failures: " + obj.failures + "; total: " + obj.total);
             testResults.failures = parseInt(obj.failures, 10);
             testResults.total = parseInt(obj.total, 10);
-            // console.log(testResults);
             retrySend( '/work/submit_results',
-                        {job_result_id: jobResultId,
+                        {work_queue_id: workQueueId,
                          results: JSON.stringify(testResults)},
                         function() {
                             handleMessage(msg);

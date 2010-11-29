@@ -7,7 +7,7 @@
 
 {% block content %}
 
-  <h1>JS TestNet</h1>
+<div id="right">
   <p>There
   {% ifequal workers.count 1 %}
     is {{ workers.count }} web browser
@@ -18,7 +18,7 @@
     run JavaScript tests.</p>
   <ul>
     {% for worker in workers %}
-    <li>{{ worker.user_agent }} [<a href="#">restart</a>]</li>
+    <li>{{ worker.user_agent }}</li>
     {% endfor %}
   </ul>
   <p>To add your web browser to the work pool, open this URL:
@@ -34,6 +34,12 @@
     </li>
     {% endfor %}
   </ul>
-  <p><a href="{% url system.test_suites %}">Add a new test suite</a></p>
+</div>
+<div id="left">
+  <ul class="nav">
+    <li><a href="{% url system.test_suites %}">Add a new test suite</a></li>
+    <li><a href="https://github.com/kumar303/jstestnet">Source code for this site</a></li>
+  </ul>
+</div>
 
 {% endblock %}

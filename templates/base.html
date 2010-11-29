@@ -2,9 +2,18 @@
 <html lang="en-US">
 <head>
   <title>JS TestNet</title>
+  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/minimalist/style.css" media="screen" />
+  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/style.css" media="screen" />
   {% block head %}{% endblock %}
 </head>
 <body>
+<div id="header">
+  <h1>JS TestNet</h1>
+</div>
+<div id="content">
+
 {% block content %}{% endblock %}
+
+</div>
 </body>
 </html>

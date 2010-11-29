@@ -1,0 +1,12 @@
+
+ul.nav li {
+    font-size: 110%;
+    padding: 1em;
+	background : #FFF6BF;
+	border-bottom: 0.3em solid #fff;
+}
+
+#right {
+    -moz-border-radius: 12px;
+    -webkit-border-radius: 12px;
+}

@@ -7,6 +7,8 @@
 
 {% block content %}
 
+<div id="right">
+
 {% if test_suite %}
   <form action="{% url system.create_edit_test_suite test_suite.id %}" method="post">
 {% else %}
@@ -40,5 +42,12 @@
   </tr>
 {% endfor %}
 </table>
+
+</div>
+<div id="left">
+  <ul class="nav">
+    <li><a href="/">Home</a></li>
+  </ul>
+</div>
 
 {% endblock %}

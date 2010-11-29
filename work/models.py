@@ -11,6 +11,15 @@ class Worker(models.Model):
     is_alive = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
 
+    def restart(self):
+        q = WorkQueue(
+            worker=self,
+            cmd='restart',
+            description='Server said restart. Goodbye!',
+            cmd_args=json.dumps([]),
+        )
+        q.save()
+
     def run_test(self, test):
         q = WorkQueue(
             worker=self,

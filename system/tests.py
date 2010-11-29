@@ -61,6 +61,22 @@ class TestSystem(TestCase):
         eq_(data['results'][0]['user_agent'], worker.user_agent)
         eq_(data['results'][0]['results'], results)
 
+    def test_restart_workers(self):
+        worker = Worker(user_agent='Mozilla/5.0 (Macintosh; U; etc...')
+        worker.save()
+        r = self.client.get(reverse('system.restart_workers'))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        eq_(data['workers_restarted'], 1)
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=worker.id,
+                                  user_agent=worker.user_agent))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        eq_(data['cmd'], 'restart')
+        eq_(data['args'], [])
+        eq_(data['desc'], 'Server said restart. Goodbye!')
+
 
 class TestSystemAdmin(TestCase):
 

@@ -71,6 +71,7 @@ def test_result(request, test_run_id):
 @transaction.commit_on_success()
 def start_tests(request, name):
     ts = get_object_or_404(TestSuite, slug=name)
+    work.views.collect_garbage()
     # TODO(kumar) don't start a test suite if it's already running.
     test = TestRun(test_suite=ts)
     test.save()
@@ -83,6 +84,17 @@ def start_tests(request, name):
     return {'test_run_id': test.id,
             'workers': [{'worker_id': w.id, 'user_agent': w.user_agent}
                          for w in workers]}
+
+
+@json_view
+@transaction.commit_on_success()
+def restart_workers(request):
+    work.views.collect_garbage()
+    count = 0
+    for worker in Worker.objects.filter(is_alive=True):
+        worker.restart()
+        count += 1
+    return {'workers_restarted': count}
 
 
 def status(request):

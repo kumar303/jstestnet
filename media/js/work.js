@@ -4,7 +4,7 @@
 
 var updateRate = 10, timeoutRate = 180,
     testTimeout, pauseTimer, testResults = {},
-    workQueueId;
+    workQueueId, workerId=WORKER_ID;
 
 jQuery( doWork );
 
@@ -36,8 +36,9 @@ var cmds = {
         // Timeout after a period of time
         testTimeout = setTimeout( testTimedout, timeoutRate * 1000 );
     },
-    reload: function() {
-        window.location.reload();
+    restart: function() {
+        var noCache = true;
+        window.location.reload(noCache);
     },
     change_rate: function( num ) {
         updateRate = parseInt( num );
@@ -48,7 +49,7 @@ function doWork() {
     workQueueId = null;
     msg("Getting work from server...");
     retrySend("/work/query",
-              {worker_id: WORKER_ID, user_agent: navigator.userAgent},
+              {worker_id: workerId, user_agent: navigator.userAgent},
                doWork, doServerCmd);
 }
 
@@ -191,7 +192,7 @@ function log( txt ) {
 }
 
 function msg( txt ) {
-    jQuery("#msg").html( txt );
+    jQuery("#msg").html( "[worker=" + workerId.toString() + "] " + txt );
 }
 
 })();

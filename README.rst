@@ -150,8 +150,7 @@ highly experimental.  Some ideas...
 - Create a Python client to execute tests and report results
 - Create a Nose plugin to integrate JavaScript tests into a Python test suite
   (and get XUnit output, etc)
-- Handle unexpected errors and test timeouts in the worker
+- Handle unexpected errors in the worker
 - Add some kind of secure test execution to prevent DoS.  Probably a simple
   token based thing.
-- Add a better way to manage test suites
 - Add some CSS styles

@@ -56,15 +56,31 @@ def delete_test_suite(request, pk):
 @json_view
 def test_result(request, test_run_id):
     test_run = get_object_or_404(TestRun, pk=test_run_id)
-    results = []
+    all_results = []
     for tq in TestRunQueue.objects.filter(test_run=test_run,
                                           work_queue__finished=True):
-        results.append({
+        posted_results = json.loads(tq.work_queue.results)
+        result = {
             'worker_id': tq.work_queue.worker.id,
             'user_agent': tq.work_queue.worker.user_agent,
-            'results': json.loads(tq.work_queue.results)
-        })
-    return {'finished': test_run.is_finished(), 'results': results}
+            'results': {'failures': posted_results['failures'],
+                        'total': posted_results['total'],
+                        'tests': []}
+        }
+        # Group assertions by module/test
+        tests = {}
+        for r in posted_results['tests']:
+            k = (str(r['module']), str(r['test']))
+            tests.setdefault(k, [])
+            tests[k].append(r)
+        for module, test in tests.keys():
+            result['results']['tests'].append({
+                'module': module,
+                'test': test,
+                'assertions': tests[(module, test)]
+            })
+        all_results.append(result)
+    return {'finished': test_run.is_finished(), 'results': all_results}
 
 
 @json_view

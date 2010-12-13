@@ -46,7 +46,14 @@ class TestSystem(TestCase):
         results = {
             'failures': 0,
             'total': 1,
-            'tests': [{'test':'foo','message':'1 equals 2'}]
+            'tests': [
+                {'module':'Bar', 'test':'foo',
+                 'message':'1 equals 2', 'result':False},
+                {'module':'Bar', 'test':'foo',
+                 'message':'ok', 'result':True},
+                {'module':'Zebo', 'test':'zee',
+                 'message':'ok', 'result':True},
+            ]
         }
         r = self.client.post(reverse('work.submit_results'),
                              dict(work_queue_id=queue_id,
@@ -59,7 +66,20 @@ class TestSystem(TestCase):
         eq_(data['finished'], True)
         eq_(data['results'][0]['worker_id'], worker.id)
         eq_(data['results'][0]['user_agent'], worker.user_agent)
-        eq_(data['results'][0]['results'], results)
+        eq_(data['results'][0]['results']['failures'], 0)
+        eq_(data['results'][0]['results']['total'], 1)
+        eq_(sorted(data['results'][0]['results']['tests']), [
+            {'module':'Bar', 'test':'foo', 'assertions':[
+                {'module':'Bar', 'test':'foo',
+                 'message':'1 equals 2', 'result':False},
+                {'module':'Bar', 'test':'foo',
+                 'message':'ok', 'result':True},
+            ]},
+            {'module':'Zebo', 'test':'zee', 'assertions':[
+                {'module':'Zebo', 'test':'zee',
+                 'message':'ok', 'result':True},
+            ]}
+        ])
 
     def test_restart_workers(self):
         worker = Worker(user_agent='Mozilla/5.0 (Macintosh; U; etc...')

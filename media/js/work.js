@@ -138,7 +138,8 @@ function handleMessage(msg){
                 module: testResults._current_module,
                 test: testResults._current_test,
                 result: obj.result == 'true' ? true: false,
-                message: obj.message
+                message: obj.message,
+                stacktrace: obj.stacktrace
             });
             break;
         case 'done':

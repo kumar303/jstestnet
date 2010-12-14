@@ -170,7 +170,7 @@ function retrySend( url, data, retry, success ) {
         data: data,
         error: function() {
             if ( errorOut++ > 4 ) {
-                cmds.reload();
+                cmds.restart();
             } else {
                 msg("Error connecting to server, retrying...");
                 setTimeout( retry, 15000 );

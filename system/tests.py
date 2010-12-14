@@ -64,21 +64,24 @@ class TestSystem(TestCase):
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         eq_(data['finished'], True)
-        eq_(data['results'][0]['worker_id'], worker.id)
-        eq_(data['results'][0]['user_agent'], worker.user_agent)
-        eq_(data['results'][0]['results']['failures'], 0)
-        eq_(data['results'][0]['results']['total'], 1)
-        eq_(sorted(data['results'][0]['results']['tests']), [
-            {'module':'Bar', 'test':'foo', 'assertions':[
-                {'module':'Bar', 'test':'foo',
-                 'message':'1 equals 2', 'result':False},
-                {'module':'Bar', 'test':'foo',
-                 'message':'ok', 'result':True},
-            ]},
-            {'module':'Zebo', 'test':'zee', 'assertions':[
-                {'module':'Zebo', 'test':'zee',
-                 'message':'ok', 'result':True},
-            ]}
+
+        tests = sorted(data['results'])
+        eq_(tests[0]['module'], 'Bar')
+        eq_(tests[0]['test'], 'foo')
+        eq_(tests[0]['assertions'], [
+            {'module':'Bar', 'test':'foo', 'worker_id': worker.id,
+             'worker_user_agent': worker.user_agent,
+             'message':'1 equals 2', 'result':False},
+            {'module':'Bar', 'test':'foo', 'worker_id': worker.id,
+             'worker_user_agent': worker.user_agent,
+             'message':'ok', 'result':True},
+        ])
+        eq_(tests[1]['module'], 'Zebo')
+        eq_(tests[1]['test'], 'zee')
+        eq_(tests[1]['assertions'], [
+            {'module':'Zebo', 'test':'zee', 'worker_id': worker.id,
+             'worker_user_agent': worker.user_agent,
+             'message':'ok', 'result':True},
         ])
 
     def test_restart_workers(self):

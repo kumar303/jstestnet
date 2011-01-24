@@ -19,7 +19,7 @@ test runners too.
 Install
 =======
 
-First, you need Python_ 2.6 or greater.  Clone this repository, create a
+First, you need Python_ 2.5 or greater.  Clone this repository, create a
 virtualenv_, then cd into the project and run::
 
   pip install -r requirements.txt

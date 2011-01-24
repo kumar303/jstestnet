@@ -3,5 +3,7 @@
 #   pip install -r requirements.txt
 #
 Django
+nose
 -e git+git://github.com/jbalogh/django-nose.git#egg=django-nose
 MySQL-python
+simplejson

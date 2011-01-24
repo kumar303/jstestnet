@@ -1,6 +1,5 @@
 
 from datetime import datetime
-import json
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -8,6 +7,7 @@ from nose.tools import eq_
 
 from system.models import TestSuite
 from work.models import Worker, TestRun, WorkQueue
+from common.stdlib import json
 
 class TestWork(TestCase):
 

@@ -1,7 +1,6 @@
-
 import functools
-import json
 
+from common.stdlib import json
 from django import http
 
 def json_view(f):

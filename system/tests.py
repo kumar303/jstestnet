@@ -1,6 +1,5 @@
 
 from datetime import datetime
-import json
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -11,6 +10,7 @@ from nose.tools import eq_
 from common.testutils import no_form_errors
 from system.models import TestSuite
 from work.models import TestRun, TestRunQueue, WorkQueue, Worker
+from common.stdlib import json
 
 class TestSystem(TestCase):
 

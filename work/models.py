@@ -1,9 +1,7 @@
-
-import json
-
 from django.db import models
 
 from system.models import TestSuite
+from common.stdlib import json
 
 class Worker(models.Model):
     user_agent = models.CharField(max_length=255)

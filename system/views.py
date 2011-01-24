@@ -1,6 +1,3 @@
-
-import json
-
 from django import http
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -8,6 +5,7 @@ from django.db import transaction
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 
+from common.stdlib import json
 from system.models import TestSuite
 from system.forms import TestSuiteForm
 from common.decorators import json_view

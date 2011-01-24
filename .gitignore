@@ -1,5 +1,6 @@
 *.py[co]
 *.sw[po]
+.tox
 pip-log.txt
 .DS_Store
 *.db

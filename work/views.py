@@ -10,11 +10,9 @@ from work.models import Worker, WorkQueue, TestRun
 
 
 def collect_garbage():
-    # Reap unresponsive workers:
+    # Reap unresponsive workers, engines, and related work queue:
     Worker.objects.filter(
             last_heartbeat__lt=datetime.now()-timedelta(seconds=30)).delete()
-    # Clear out the work queue:
-    WorkQueue.objects.filter(finished=True, results_received=True).delete()
 
 
 @json_view
@@ -22,7 +20,7 @@ def collect_garbage():
 def query(request):
     worker = get_object_or_404(Worker, pk=request.POST.get('worker_id', 0))
     worker.last_heartbeat = datetime.now()
-    worker.user_agent = request.POST['user_agent']
+    worker.parse_user_agent(request.POST['user_agent'])
     worker.save()
     collect_garbage()
     # Look for work, FIFO:

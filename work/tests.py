@@ -1,13 +1,15 @@
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from nose.tools import eq_
 
 from system.models import TestSuite
-from work.models import Worker, TestRun, WorkQueue
+from work.models import Worker, WorkerEngine, TestRun, WorkQueue
+from work.views import collect_garbage
 from common.stdlib import json
+from system.useragent import parse_useragent
 
 class TestWork(TestCase):
 
@@ -28,9 +30,10 @@ class TestWork(TestCase):
         ts.save()
         r = self.client.get(reverse('system.start_tests', args=['zamboni']))
         eq_(r.status_code, 200)
+        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
         r = self.client.post(reverse('work.query'),
-                             dict(worker_id=worker.id,
-                                  user_agent='<user agent>'))
+                             dict(worker_id=worker.id, user_agent=user_agent))
         eq_(r.status_code, 200)
         data = json.loads(r.content)
 
@@ -86,6 +89,9 @@ class TestWork(TestCase):
         eq_(queue.worker.last_heartbeat.timetuple()[0:3],
             datetime.now().timetuple()[0:3])
         eq_(queue.worker.user_agent, user_agent)
+        eq_(sorted([(e.engine, e.version) for e in
+                    queue.worker.engines.all()]),
+            sorted(parse_useragent(user_agent)))
 
         results = {
             'failures': 0,
@@ -111,3 +117,16 @@ class TestWork(TestCase):
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         eq_(data['desc'], 'No commands from server.')
+
+    def test_garbage_collection(self):
+        w = Worker.objects.create()
+        w.parse_user_agent('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                           'en-US; rv:1.9.2.12) Gecko/20101026 '
+                           'Firefox/3.6.12')
+        w.last_heartbeat = datetime.now() - timedelta(seconds=31)
+        w.save()
+        w.restart()
+        collect_garbage()
+        eq_([o.id for o in Worker.objects.all()], [])
+        eq_([o.engine for o in WorkerEngine.objects.all()], [])
+        eq_([o.id for o in WorkQueue.objects.all()], [])

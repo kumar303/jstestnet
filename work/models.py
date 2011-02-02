@@ -2,12 +2,22 @@ from django.db import models
 
 from system.models import TestSuite
 from common.stdlib import json
+from system.useragent import parse_useragent
+
 
 class Worker(models.Model):
     user_agent = models.CharField(max_length=255)
     last_heartbeat = models.DateTimeField(null=True)
     is_alive = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
+
+    def parse_user_agent(self, user_agent):
+        if self.user_agent:
+            # Already parsed, nothing to do
+            return
+        self.user_agent = user_agent
+        for engine, version in parse_useragent(user_agent):
+            WorkerEngine(worker=self, engine=engine, version=version).save()
 
     def restart(self):
         q = WorkQueue(
@@ -33,6 +43,13 @@ class Worker(models.Model):
         tq = TestRunQueue(test_run=test, work_queue=q)
         tq.save()
 
+
+class WorkerEngine(models.Model):
+    worker = models.ForeignKey(Worker, related_name='engines')
+    engine = models.CharField(max_length=50, db_index=True)
+    version = models.CharField(max_length=10)
+
+
 class TestRun(models.Model):
     test_suite = models.ForeignKey(TestSuite)
     created = models.DateTimeField(auto_now_add=True)
@@ -44,6 +61,7 @@ class TestRun(models.Model):
         q = TestRunQueue.objects.filter(test_run=self,
                                         work_queue__finished=False)
         return q.count() == 0
+
 
 class WorkQueue(models.Model):
     worker = models.ForeignKey(Worker)
@@ -58,6 +76,7 @@ class WorkQueue(models.Model):
     results = models.TextField(null=True)
     results_received = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
+
 
 class TestRunQueue(models.Model):
     test_run = models.ForeignKey(TestRun)

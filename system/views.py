@@ -2,6 +2,7 @@ from django import http
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 
@@ -79,6 +80,26 @@ def test_result(request, test_run_id):
     return {'finished': test_run.is_finished(), 'results': all_results}
 
 
+def filter_by_engine(qs, engines):
+    all_specs = engines.lower().split(',')
+    or_ = []
+    for spec in all_specs:
+        if '=~' in spec:
+            name, version = spec.split('=~')
+        else:
+            name = spec
+            version = '*'
+        if version == '*':
+            or_.append(Q(engines__engine=name))
+        else:
+            or_.append(Q(engines__engine=name,
+                         engines__version__istartswith=version))
+    q = or_.pop(0)
+    for stmt in or_:
+        q = q | stmt
+    return qs.filter(q)
+
+
 @json_view
 @transaction.commit_on_success()
 def start_tests(request, name):
@@ -88,7 +109,11 @@ def start_tests(request, name):
     test = TestRun(test_suite=ts)
     test.save()
     workers = []
-    for worker in Worker.objects.filter(is_alive=True):
+    qs = Worker.objects.filter(is_alive=True)
+    engines = request.GET.get('engines', None)
+    if engines:
+        qs = filter_by_engine(qs, engines)
+    for worker in qs:
         # TODO(kumar) add options to ignore workers for
         # unwanted browsers perhaps?
         worker.run_test(test)

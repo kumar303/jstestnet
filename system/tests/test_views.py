@@ -9,21 +9,62 @@ from nose.tools import eq_
 
 from common.testutils import no_form_errors
 from system.models import TestSuite
+from system.views import filter_by_engine
 from work.models import TestRun, TestRunQueue, WorkQueue, Worker
 from common.stdlib import json
 
+
+def create_ts():
+    return TestSuite.objects.create(name='Zamboni', slug='zamboni',
+                                    url='http://server/qunit1.html')
+
+
+def create_worker(user_agent=None):
+    if not user_agent:
+        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
+    worker = Worker()
+    worker.save()
+    worker.parse_user_agent(user_agent)
+    worker.save()
+    return worker
+
+
 class TestSystem(TestCase):
+
+    def query(self, worker):
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=worker.id,
+                                  user_agent=worker.user_agent))
+        eq_(r.status_code, 200)
+        return json.loads(r.content)
 
     def test_status_page(self):
         r = self.client.get(reverse('system.status'))
         eq_(r.status_code, 200)
 
+    def test_start_specific_worker(self):
+        ts = create_ts()
+        fx_worker = create_worker(
+                    user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; '
+                               'rv:2.0b10) Gecko/20100101 Firefox/4.0b10')
+        ch_worker = create_worker(
+                    user_agent='Mozilla/5.0 (Windows; U; Windows NT 5.2; '
+                               'en-US) AppleWebKit/534.17 (KHTML, like Gecko)'
+                               ' Chrome/11.0.652.0 Safari/534.17')
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
+                            data={'engines': 'firefox=~*'})
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+
+        data = self.query(ch_worker)
+        eq_(data, {u'desc': u'No commands from server.'})
+        data = self.query(fx_worker)
+        eq_(data['cmd'], 'run_test')
+
     def test_get_job_result(self):
-        ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://server/qunit1.html')
-        ts.save()
-        worker = Worker(user_agent='Mozilla/5.0 (Macintosh; U; etc...')
-        worker.save()
+        ts = create_ts()
+        worker = create_worker()
 
         r = self.client.get(reverse('system.start_tests', args=['zamboni']))
         eq_(r.status_code, 200)
@@ -36,11 +77,7 @@ class TestSystem(TestCase):
         eq_(data['finished'], False)
         eq_(data['results'], [])
 
-        r = self.client.post(reverse('work.query'),
-                             dict(worker_id=worker.id,
-                                  user_agent=worker.user_agent))
-        eq_(r.status_code, 200)
-        data = json.loads(r.content)
+        data = self.query(worker)
         queue_id = data['work_queue_id']
 
         results = {
@@ -99,6 +136,61 @@ class TestSystem(TestCase):
         eq_(data['cmd'], 'restart')
         eq_(data['args'], [])
         eq_(data['desc'], 'Server said restart. Goodbye!')
+
+
+class TestFilterByEngine(TestCase):
+
+    def setUp(self):
+        for ua in [
+            # Firefox:
+            ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; '
+             'rv:1.9.2.13) Gecko/20101203 Firefox/3.6.13'),
+            ('Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0b7pre) '
+             'Gecko/20100925 Firefox/4.0b7pre'),
+            # Chrome:
+            ('Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US) '
+             'AppleWebKit/534.17 (KHTML, like Gecko) Chrome/11.0.652.0 '
+             'Safari/534.17')]:
+            create_worker(ua)
+
+    def filter(self, spec):
+        qs = filter_by_engine(Worker.objects.all(), spec)
+        engines = []
+        for worker in qs:
+            for e in worker.engines.all():
+                engines.append((e.engine, e.version))
+        return sorted(engines)
+
+    def test_firefox_version(self):
+        eq_(self.filter('firefox=~3.6'),
+            [(u'firefox', u'3.6.13'), (u'gecko', u'1.9.2.13')])
+        eq_(self.filter('firefox=~3'),
+            [(u'firefox', u'3.6.13'), (u'gecko', u'1.9.2.13')])
+
+    def test_firefox_all(self):
+        eq_(self.filter('firefox'),
+            [(u'firefox', u'3.6.13'), (u'firefox', u'4.0b7pre'),
+             (u'gecko', u'1.9.2.13'), (u'gecko', u'2.0b7pre')])
+        eq_(self.filter('firefox=~*'),
+            [(u'firefox', u'3.6.13'), (u'firefox', u'4.0b7pre'),
+             (u'gecko', u'1.9.2.13'), (u'gecko', u'2.0b7pre')])
+        eq_(self.filter('firefox=~3,firefox=~4'),
+            [(u'firefox', u'3.6.13'), (u'firefox', u'4.0b7pre'),
+             (u'gecko', u'1.9.2.13'), (u'gecko', u'2.0b7pre')])
+
+    def test_firefox_none(self):
+        eq_(self.filter('firefox=~1.5'), [])
+
+    def test_chrome_and_firefox_happy_together(self):
+        eq_(self.filter('chrome,firefox'),
+            [(u'applewebkit', u'534.17'), (u'chrome', u'11.0.652.0'),
+             (u'firefox', u'3.6.13'), (u'firefox', u'4.0b7pre'),
+             (u'gecko', u'1.9.2.13'), (u'gecko', u'2.0b7pre'),
+             (u'safari', u'534.17')])
+        eq_(self.filter('firefox=~4.0,chrome'),
+            [(u'applewebkit', u'534.17'), (u'chrome', u'11.0.652.0'),
+             (u'firefox', u'4.0b7pre'), (u'gecko', u'2.0b7pre'),
+             (u'safari', u'534.17')])
 
 
 class TestSystemAdmin(TestCase):

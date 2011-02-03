@@ -130,3 +130,23 @@ class TestWork(TestCase):
         eq_([o.id for o in Worker.objects.all()], [])
         eq_([o.engine for o in WorkerEngine.objects.all()], [])
         eq_([o.id for o in WorkQueue.objects.all()], [])
+
+    def test_zombie_worker_gets_told_to_restart(self):
+        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
+        # post an unknown worker ID
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=666, user_agent=user_agent))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        eq_(data['cmd'], 'restart')
+
+    def test_invalid_input_gets_told_to_restart(self):
+        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id='some kind of garbage',
+                                  user_agent=user_agent))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        eq_(data['cmd'], 'restart')

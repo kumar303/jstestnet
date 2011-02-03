@@ -18,7 +18,15 @@ def collect_garbage():
 @json_view
 @transaction.commit_on_success()
 def query(request):
-    worker = get_object_or_404(Worker, pk=request.POST.get('worker_id', 0))
+    try:
+        worker = Worker.objects.get(pk=request.POST.get('worker_id', 0))
+    except (ValueError, Worker.DoesNotExist):
+        return {
+            'work_queue_id': -1,
+            'cmd': 'restart',
+            'description': 'Unknown worker ID',
+            'args': []
+        }
     worker.last_heartbeat = datetime.now()
     worker.parse_user_agent(request.POST['user_agent'])
     worker.save()

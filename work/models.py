@@ -11,6 +11,14 @@ class Worker(models.Model):
     is_alive = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
 
+    def get_engine(self, name):
+        for e in self.engines.all():
+            if e.engine == name:
+                return e
+        raise LookupError(
+                "Worker %r does not have an engine called %r" % (self,
+                                                                 name))
+
     def parse_user_agent(self, user_agent):
         if self.user_agent:
             # Already parsed, nothing to do

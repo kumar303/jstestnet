@@ -5,11 +5,11 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from nose.tools import eq_
+from nose.tools import eq_, raises
 
 from common.testutils import no_form_errors
 from system.models import TestSuite
-from system.views import filter_by_engine
+from system.views import get_workers, NoWorkers
 from work.models import TestRun, TestRunQueue, WorkQueue, Worker
 from common.stdlib import json
 
@@ -43,6 +43,15 @@ class TestSystem(TestCase):
         r = self.client.get(reverse('system.status'))
         eq_(r.status_code, 200)
 
+    def test_start_tests_with_no_workers(self):
+        ts = create_ts()
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
+                            data={'engines': 'firefox'})
+        eq_(r.status_code, 500)
+        data = json.loads(r.content)
+        eq_(data['error'], True)
+        eq_(data['message'], "No workers for u'firefox' are connected")
+
     def test_start_specific_worker(self):
         ts = create_ts()
         fx_worker = create_worker(
@@ -66,7 +75,8 @@ class TestSystem(TestCase):
         ts = create_ts()
         worker = create_worker()
 
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']))
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
+                            data={'engines': 'firefox'})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         test_run_id = data['test_run_id']
@@ -150,13 +160,15 @@ class TestFilterByEngine(TestCase):
             # Chrome:
             ('Mozilla/5.0 (Windows; U; Windows NT 5.2; en-US) '
              'AppleWebKit/534.17 (KHTML, like Gecko) Chrome/11.0.652.0 '
-             'Safari/534.17')]:
+             'Safari/534.17'),
+            # Two MSIE browsers with identical versions:
+            'Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US)',
+            'Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US)']:
             create_worker(ua)
 
-    def filter(self, spec):
-        qs = filter_by_engine(Worker.objects.all(), spec)
+    def filter(self, spec=None):
         engines = []
-        for worker in qs:
+        for worker in get_workers(Worker.objects.all(), spec):
             for e in worker.engines.all():
                 engines.append((e.engine, e.version))
         return sorted(engines)
@@ -178,8 +190,9 @@ class TestFilterByEngine(TestCase):
             [(u'firefox', u'3.6.13'), (u'firefox', u'4.0b7pre'),
              (u'gecko', u'1.9.2.13'), (u'gecko', u'2.0b7pre')])
 
+    @raises(NoWorkers)
     def test_firefox_none(self):
-        eq_(self.filter('firefox=~1.5'), [])
+        self.filter('firefox=~1.5')
 
     def test_chrome_and_firefox_happy_together(self):
         eq_(self.filter('chrome,firefox'),
@@ -191,6 +204,10 @@ class TestFilterByEngine(TestCase):
             [(u'applewebkit', u'534.17'), (u'chrome', u'11.0.652.0'),
              (u'firefox', u'4.0b7pre'), (u'gecko', u'2.0b7pre'),
              (u'safari', u'534.17')])
+
+    def test_one_msie_worker(self):
+        eq_(self.filter('msie=~9'),
+            [(u'msie', u'9.0')])
 
 
 class TestSystemAdmin(TestCase):

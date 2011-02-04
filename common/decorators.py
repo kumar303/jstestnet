@@ -1,15 +1,29 @@
 import functools
+import logging
 
 from common.stdlib import json
 from django import http
 
+
+log = logging.getLogger()
+
+
 def json_view(f):
     @functools.wraps(f)
     def wrapper(*args, **kw):
-        response = f(*args, **kw)
-        if isinstance(response, http.HttpResponse):
-            return response
-        else:
-            return http.HttpResponse(json.dumps(response),
-                                     content_type='application/json')
+        try:
+            response = f(*args, **kw)
+            status = 200
+        except Exception, err:
+            # @TODO(kumar) Need to hook into Django's email mailer here
+            log.exception("in JSON response")
+            response = {
+                'success': False,
+                'error': True,
+                'message': str(err)
+            }
+            status = 500
+        return http.HttpResponse(json.dumps(response),
+                                 content_type='application/json',
+                                 status=status)
     return wrapper

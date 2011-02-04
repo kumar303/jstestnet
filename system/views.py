@@ -1,3 +1,5 @@
+import random
+
 from django import http
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
@@ -80,24 +82,46 @@ def test_result(request, test_run_id):
     return {'finished': test_run.is_finished(), 'results': all_results}
 
 
-def filter_by_engine(qs, engines):
-    all_specs = engines.lower().split(',')
-    or_ = []
-    for spec in all_specs:
+class NoWorkers(Exception):
+    """No workers are available for the request."""
+
+
+def select_engine_workers(all_workers, name):
+    engines = {}
+    for worker in all_workers:
+        engine = worker.get_engine(name)
+        k = (name, engine.version)
+        engines.setdefault(k, [])
+        engines[k].append(worker)
+    for version, pool in engines.items():
+        # We only need on worker per engine/version.
+        # TODO(Kumar) implement a better round-robin here, maybe one
+        # that excludes busy workers:
+        yield random.choice(pool)
+
+
+def get_workers(qs, engines):
+    workers = []
+    for spec in engines.lower().split(','):
         if '=~' in spec:
             name, version = spec.split('=~')
         else:
             name = spec
             version = '*'
+        matches = []
         if version == '*':
-            or_.append(Q(engines__engine=name))
+            matches = list(qs.all().filter(engines__engine=name))
         else:
-            or_.append(Q(engines__engine=name,
-                         engines__version__istartswith=version))
-    q = or_.pop(0)
-    for stmt in or_:
-        q = q | stmt
-    return qs.filter(q)
+            matches = list(qs.all().filter(
+                            engines__engine=name,
+                            engines__version__istartswith=version))
+        if len(matches) == 0:
+            raise NoWorkers("No workers for %r are connected" % spec)
+        # Make a pool of workers per identical engine/version
+        # and only select one worker per version.
+        for w in select_engine_workers(matches, name):
+            workers.append(w)
+    return workers
 
 
 @json_view
@@ -111,9 +135,9 @@ def start_tests(request, name):
     workers = []
     qs = Worker.objects.filter(is_alive=True)
     engines = request.GET.get('engines', None)
-    if engines:
-        qs = filter_by_engine(qs, engines)
-    for worker in qs:
+    if not engines:
+        raise ValueError("No engines were specified")
+    for worker in get_workers(qs, engines):
         # TODO(kumar) add options to ignore workers for
         # unwanted browsers perhaps?
         worker.run_test(test)

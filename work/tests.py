@@ -23,15 +23,17 @@ class TestWork(TestCase):
         eq_(worker.last_heartbeat, None)
 
     def test_submit_error_results(self):
-        worker = Worker()
+        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
+        worker = Worker.objects.create()
+        worker.parse_user_agent(user_agent)
         worker.save()
         ts = TestSuite(name='Zamboni', slug='zamboni',
                        url='http://server/qunit1.html')
         ts.save()
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']))
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
+                            data={'engines': 'firefox'})
         eq_(r.status_code, 200)
-        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
-                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
         r = self.client.post(reverse('work.query'),
                              dict(worker_id=worker.id, user_agent=user_agent))
         eq_(r.status_code, 200)
@@ -67,7 +69,8 @@ class TestWork(TestCase):
         eq_(data['desc'], 'No commands from server.')
 
         # Simulate Hudson requesting a job:
-        r = self.client.get(reverse('system.start_tests', args=[ts.slug]))
+        r = self.client.get(reverse('system.start_tests', args=[ts.slug]),
+                            data={'engines': 'firefox'})
         eq_(r.status_code, 200)
 
         # Do work

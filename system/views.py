@@ -100,9 +100,10 @@ def select_engine_workers(all_workers, name):
         yield random.choice(pool)
 
 
-def get_workers(qs, engines):
+def get_workers(qs, browser_spec):
     workers = []
-    for spec in engines.lower().split(','):
+    for spec in browser_spec.lower().split(','):
+        spec = spec.strip()
         if '=~' in spec:
             name, version = spec.split('=~')
         else:
@@ -134,10 +135,10 @@ def start_tests(request, name):
     test.save()
     workers = []
     qs = Worker.objects.filter(is_alive=True)
-    engines = request.GET.get('engines', None)
-    if not engines:
-        raise ValueError("No engines were specified")
-    for worker in get_workers(qs, engines):
+    browsers = request.GET.get('browsers', None)
+    if not browsers:
+        raise ValueError("No browsers were specified in GET request")
+    for worker in get_workers(qs, browsers):
         # TODO(kumar) add options to ignore workers for
         # unwanted browsers perhaps?
         worker.run_test(test)

@@ -46,7 +46,7 @@ class TestSystem(TestCase):
     def test_start_tests_with_no_workers(self):
         ts = create_ts()
         r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'engines': 'firefox'})
+                            data={'browsers': 'firefox'})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -62,7 +62,7 @@ class TestSystem(TestCase):
                                'en-US) AppleWebKit/534.17 (KHTML, like Gecko)'
                                ' Chrome/11.0.652.0 Safari/534.17')
         r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'engines': 'firefox=~*'})
+                            data={'browsers': 'firefox=~*'})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
 
@@ -76,7 +76,7 @@ class TestSystem(TestCase):
         worker = create_worker()
 
         r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'engines': 'firefox'})
+                            data={'browsers': 'firefox'})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         test_run_id = data['test_run_id']

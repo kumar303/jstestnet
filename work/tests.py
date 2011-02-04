@@ -32,7 +32,7 @@ class TestWork(TestCase):
                        url='http://server/qunit1.html')
         ts.save()
         r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'engines': 'firefox'})
+                            data={'browsers': 'firefox'})
         eq_(r.status_code, 200)
         r = self.client.post(reverse('work.query'),
                              dict(worker_id=worker.id, user_agent=user_agent))
@@ -70,7 +70,7 @@ class TestWork(TestCase):
 
         # Simulate Hudson requesting a job:
         r = self.client.get(reverse('system.start_tests', args=[ts.slug]),
-                            data={'engines': 'firefox'})
+                            data={'browsers': 'firefox'})
         eq_(r.status_code, 200)
 
         # Do work

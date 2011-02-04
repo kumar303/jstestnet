@@ -51,6 +51,12 @@ class Worker(models.Model):
         tq = TestRunQueue(test_run=test, work_queue=q)
         tq.save()
 
+    @property
+    def browser(self):
+        engines = sorted(["%s/%s" % (e.engine, e.version)
+                          for e in self.engines.all()])
+        return ", ".join(engines)
+
 
 class WorkerEngine(models.Model):
     worker = models.ForeignKey(Worker, related_name='engines')

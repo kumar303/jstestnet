@@ -118,9 +118,11 @@ class TestSystem(TestCase):
         eq_(tests[0]['assertions'], [
             {'module':'Bar', 'test':'foo', 'worker_id': worker.id,
              'worker_user_agent': worker.user_agent,
+             'browser': 'firefox/3.6.12, gecko/1.9.2.12',
              'message':'1 equals 2', 'result':False},
             {'module':'Bar', 'test':'foo', 'worker_id': worker.id,
              'worker_user_agent': worker.user_agent,
+             'browser': 'firefox/3.6.12, gecko/1.9.2.12',
              'message':'ok', 'result':True},
         ])
         eq_(tests[1]['module'], 'Zebo')
@@ -128,6 +130,7 @@ class TestSystem(TestCase):
         eq_(tests[1]['assertions'], [
             {'module':'Zebo', 'test':'zee', 'worker_id': worker.id,
              'worker_user_agent': worker.user_agent,
+             'browser': 'firefox/3.6.12, gecko/1.9.2.12',
              'message':'ok', 'result':True},
         ])
 

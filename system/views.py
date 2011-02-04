@@ -67,6 +67,7 @@ def test_result(request, test_run_id):
             r = {
                 'worker_id': tq.work_queue.worker.id,
                 'worker_user_agent': tq.work_queue.worker.user_agent,
+                'browser': tq.work_queue.worker.browser
             }
             r.update(test)
             tests[k].append(r)

@@ -149,9 +149,6 @@ the command to run the test suite::
 To-Do
 =====
 
-A lot!  In fact, this is probably broken, insecure, and should be viewed as
-highly experimental.  Some ideas...
-
 - Handle unexpected errors in the worker
 - Add some kind of secure test execution to prevent DoS.  Probably a simple
   token based thing.

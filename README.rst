@@ -5,13 +5,13 @@ JS TestNet
 
 JS TestNet is a Django_ web service that coordinates the execution of
 JavaScript tests across web browsers.  It was designed to run pure JavaScript
-tests with Qunit_ in a CI environment like Hudson_ and to get test feedback
+tests with Qunit_ in a CI environment like Jenkins_ and to get test feedback
 from real web browsers.  It is probably flexible enough for other JavaScript
 test runners too.
 
 .. _Django: http://www.djangoproject.com/
 .. _Qunit: http://docs.jquery.com/Qunit
-.. _Hudson: http://hudson-ci.org/
+.. _Jenkins: http://jenkins-ci.org/
 
 .. contents::
       :local:
@@ -112,6 +112,11 @@ check for results at::
 
   http://127.0.0.1:8000/job/{id}/result
 
+Python Client
+=============
+
+Check out `JsTestNetLib <https://github.com/kumar303/jstestnetlib>`_!
+
 Credits
 =======
 
@@ -147,10 +152,6 @@ To-Do
 A lot!  In fact, this is probably broken, insecure, and should be viewed as
 highly experimental.  Some ideas...
 
-- Create a Python client to execute tests and report results
-- Create a Nose plugin to integrate JavaScript tests into a Python test suite
-  (and get XUnit output, etc)
 - Handle unexpected errors in the worker
 - Add some kind of secure test execution to prevent DoS.  Probably a simple
   token based thing.
-- Add some CSS styles

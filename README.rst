@@ -28,7 +28,13 @@ Make your own settings_local.py::
 
   cp settings_local.py-example settings_local.py
 
-Set up a MySQL user and enter the credentials in settings_local.py (if different from settings.py)::
+Set up a MySQL user and database::
+
+  mysql> create user jstestnet_dev@localhost identified by 'test';
+  mysql> create database jstestnet_dev;
+  mysql> grant all on jstestnet_dev.* to jstestnet_dev;
+
+Then enter the credentials in settings_local.py::
 
   DATABASES['default']['NAME'] = 'jstestnet_dev'
   DATABASES['default']['USER'] = 'jstestnet_dev'

@@ -145,11 +145,13 @@ Also, JS TestNet is dumber than TestSwarm in that it requires an adapter.
 Developers
 ==========
 
-Hi!  Feel free to submit bugs, patches and pull requests on github_.  Here is
-the command to run the test suite::
+Hi!  Feel free to submit bugs, patches and pull requests on github_.
+To run the test suite first install `tox`_ then run it from the project dir::
 
-  ./manage.py test
+  $ cd jstestnet
+  $ tox
 
+.. _tox: http://codespeak.net/tox/
 .. _github: https://github.com/kumar303/jstestnet
 
 To-Do

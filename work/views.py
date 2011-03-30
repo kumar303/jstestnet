@@ -61,8 +61,14 @@ def submit_results(request):
                           pk=request.POST.get('work_queue_id', 0))
     results = json.loads(request.POST['results'])
     if results.get('test_run_error'):
-        if 'tests' not in results:
-            results['tests'] = []
+        tests = results.get('tests', [])
+        tests.append({
+            'result': False,
+            'module': '__jstestnet__',
+            'test': 'test_run_error',
+            'message': results['test_run_error_msg']
+        })
+        results['tests'] = tests
     if 'tests' not in results:
         raise ValueError('Results JSON is missing key tests (list)')
     for i, test in enumerate(results['tests']):

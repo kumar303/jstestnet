@@ -161,8 +161,10 @@ class TestWorkResults(TestCase):
         q = WorkQueue.objects.get(pk=self.work_queue_id)
         eq_(q.finished, True)
         d = json.loads(q.results)
-        eq_(d['test_run_error'], results['test_run_error'])
-        eq_(d['test_run_error_msg'], results['test_run_error_msg'])
+        eq_(d['tests'][0], {'module': '__jstestnet__',
+                            'test': 'test_run_error',
+                            'result': False,
+                            'message': results['test_run_error_msg']})
 
     def test_submit_incomplete_results(self):
         results = {

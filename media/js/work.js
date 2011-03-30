@@ -29,12 +29,23 @@ var cmds = {
         iframe.src = params.url + '?_=' + (new Date).getTime();
         jQuery("#iframes").append( iframe );
 
+        var loadTimeout = 10000;
+        var failedToLoad = setTimeout(function() {
+            runtimeError('Failed to load the test suite in ' + loadTimeout/1000 + ' seconds');
+        }, loadTimeout);
+
+        jQuery(iframe).load(function(e) {
+            clearTimeout(failedToLoad);
+        });
+
         // The iframe must communicate back to us
         // with window.top.postMessage.
         // See handleMessage() for how those are received.
 
         // Timeout after a period of time
-        testTimeout = setTimeout( testTimedout, timeoutRate * 1000 );
+        testTimeout = setTimeout(function() {
+            runtimeError('Timed out waiting for test results');
+        }, timeoutRate * 1000 );
     },
     restart: function() {
         var noCache = true;
@@ -94,18 +105,18 @@ function cancelTest() {
     jQuery("iframe").remove();
 }
 
-function testTimedout() {
+function runtimeError(msg) {
     cancelTest();
     var msg = {
         test_run_error: true,
-        test_run_error_msg: 'Timed out waiting for test results'
+        test_run_error_msg: msg
     }
     log(msg.job_error_msg);
     retrySend('/work/submit_results', {
             work_queue_id: workQueueId,
             results: JSON.stringify(msg)
         },
-        testTimedout, doWork );
+        runtimeError, doWork );
 }
 
 function parseQueryStr(qs) {

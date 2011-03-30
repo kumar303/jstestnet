@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from nose.tools import eq_
+from nose.tools import eq_, raises
 
 from system.models import TestSuite
 from work.models import Worker, WorkerEngine, TestRun, WorkQueue
@@ -21,36 +21,6 @@ class TestWork(TestCase):
         eq_(worker.created.timetuple()[0:3],
             datetime.now().timetuple()[0:3])
         eq_(worker.last_heartbeat, None)
-
-    def test_submit_error_results(self):
-        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
-                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
-        worker = Worker.objects.create()
-        worker.parse_user_agent(user_agent)
-        worker.save()
-        ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://server/qunit1.html')
-        ts.save()
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'browsers': 'firefox'})
-        eq_(r.status_code, 200)
-        r = self.client.post(reverse('work.query'),
-                             dict(worker_id=worker.id, user_agent=user_agent))
-        eq_(r.status_code, 200)
-        data = json.loads(r.content)
-
-        results = {
-            'test_run_error': True,
-            'test_run_error_msg': 'Timed out waiting for test results'
-        }
-        r = self.client.post(reverse('work.submit_results'),
-                             dict(work_queue_id=data['work_queue_id'],
-                                  results=json.dumps(results)))
-        eq_(r.status_code, 200)
-
-        q = WorkQueue.objects.get(pk=data['work_queue_id'])
-        eq_(q.finished, True)
-        eq_(q.results, json.dumps(results))
 
     def test_work(self):
         user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
@@ -99,7 +69,10 @@ class TestWork(TestCase):
         results = {
             'failures': 0,
             'total': 1,
-            'tests': [{'test':'foo','message':'1 equals 2'}]
+            'tests': [{'test': 'foo',
+                       'message': '1 equals 2',
+                       'module': 'some module',
+                       'result': True}]
         }
         r = self.client.post(reverse('work.submit_results'),
                              dict(work_queue_id=queue.id,
@@ -153,3 +126,76 @@ class TestWork(TestCase):
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         eq_(data['cmd'], 'restart')
+
+
+class TestWorkResults(TestCase):
+
+    def setUp(self):
+        user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '
+                      'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
+        worker = Worker.objects.create()
+        worker.parse_user_agent(user_agent)
+        worker.save()
+        ts = TestSuite(name='Zamboni', slug='zamboni',
+                       url='http://server/qunit1.html')
+        ts.save()
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
+                            data={'browsers': 'firefox'})
+        eq_(r.status_code, 200)
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=worker.id, user_agent=user_agent))
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        self.work_queue_id = data['work_queue_id']
+
+    def test_submit_error_results(self):
+        results = {
+            'test_run_error': True,
+            'test_run_error_msg': 'Timed out waiting for test results'
+        }
+        r = self.client.post(reverse('work.submit_results'),
+                             dict(work_queue_id=self.work_queue_id,
+                                  results=json.dumps(results)))
+        eq_(r.status_code, 200)
+
+        q = WorkQueue.objects.get(pk=self.work_queue_id)
+        eq_(q.finished, True)
+        d = json.loads(q.results)
+        eq_(d['test_run_error'], results['test_run_error'])
+        eq_(d['test_run_error_msg'], results['test_run_error_msg'])
+
+    def test_submit_incomplete_results(self):
+        results = {
+            'failures': 0,
+            'total': 1,
+            # mostly empty test result:
+            'tests': [{'result': True}]
+        }
+        r = self.client.post(reverse('work.submit_results'),
+                             dict(work_queue_id=self.work_queue_id,
+                                  results=json.dumps(results)))
+        eq_(r.status_code, 200)
+
+        q = WorkQueue.objects.get(pk=self.work_queue_id)
+        eq_(q.finished, True)
+        eq_(json.loads(q.results)['tests'],
+            [{'result': True,
+              'module': "<'module' was empty>",
+              'test': "<'test' was empty>",
+              'message': "<'message' was empty>"}])
+
+    def test_missing_results(self):
+        results = {
+            'failures': 0,
+            'total': 1,
+            # totally empty
+            'tests': [{}]
+        }
+        r = self.client.post(reverse('work.submit_results'),
+                             dict(work_queue_id=self.work_queue_id,
+                                  results=json.dumps(results)))
+        eq_(r.status_code, 500)
+        d = json.loads(r.content)
+        eq_(d['error'], True)
+        assert 'missing key result' in d['message'], (
+                                            'Unexpected: %s' % d['message'])

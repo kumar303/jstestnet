@@ -59,8 +59,22 @@ def query(request):
 def submit_results(request):
     q = get_object_or_404(WorkQueue,
                           pk=request.POST.get('work_queue_id', 0))
+    results = json.loads(request.POST['results'])
+    if results.get('test_run_error'):
+        if 'tests' not in results:
+            results['tests'] = []
+    if 'tests' not in results:
+        raise ValueError('Results JSON is missing key tests (list)')
+    for i, test in enumerate(results['tests']):
+        if 'result' not in test:
+            raise ValueError(
+                'results.tests[%s] JSON is missing key result '
+                '(True or False)' % i)
+        for k in ('module', 'test', 'message'):
+            if k not in test:
+                test[k] = '<%r was empty>' % k
     q.finished = True
-    q.results = request.POST['results']
+    q.results = json.dumps(results)
     q.save()
     return {
         'desc': 'Test result received'

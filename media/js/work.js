@@ -29,9 +29,9 @@ var cmds = {
         iframe.src = params.url + '?_=' + (new Date).getTime();
         jQuery("#iframes").append( iframe );
 
-        var loadTimeout = 10000;
+        var loadTimeout = 1000 * 60 * 2; // 2 min
         var failedToLoad = setTimeout(function() {
-            runtimeError('Failed to load the test suite in ' + loadTimeout/1000 + ' seconds');
+            runtimeError('Failed to load the test suite in ' + loadTimeout/60000 + ' minutes');
         }, loadTimeout);
 
         jQuery(iframe).load(function(e) {

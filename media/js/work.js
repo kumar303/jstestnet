@@ -105,13 +105,13 @@ function cancelTest() {
     jQuery("iframe").remove();
 }
 
-function runtimeError(msg) {
+function runtimeError(errorMsg) {
     cancelTest();
     var msg = {
         test_run_error: true,
-        test_run_error_msg: msg
+        test_run_error_msg: errorMsg
     }
-    log(msg);
+    log(msg.test_run_error_msg);
     retrySend('/work/submit_results', {
             work_queue_id: workQueueId,
             results: JSON.stringify(msg)

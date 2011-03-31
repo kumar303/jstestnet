@@ -111,7 +111,7 @@ function runtimeError(msg) {
         test_run_error: true,
         test_run_error_msg: msg
     }
-    log(msg.job_error_msg);
+    log(msg);
     retrySend('/work/submit_results', {
             work_queue_id: workQueueId,
             results: JSON.stringify(msg)

@@ -36,6 +36,8 @@ var cmds = {
 
         jQuery(iframe).load(function(e) {
             clearTimeout(failedToLoad);
+        }).error(function(e) {
+            runtimeError('There was an error loading this test suite in an iframe');
         });
 
         // The iframe must communicate back to us
@@ -146,8 +148,8 @@ function handleMessage(msg){
                 testResults.tests = [];
             }
             testResults.tests.push({
-                module: testResults._current_module,
-                test: testResults._current_test,
+                module: testResults._current_module || '__jstestnet__',
+                test: testResults._current_test || '__jstestnet__',
                 result: obj.result == 'true' ? true: false,
                 message: obj.message,
                 stacktrace: obj.stacktrace

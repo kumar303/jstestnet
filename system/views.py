@@ -163,7 +163,8 @@ def restart_workers(request):
 def status(request):
     work.views.collect_garbage()
     return render_to_response('system/index.html', dict(
-                workers=Worker.objects.filter(is_alive=True),
+                workers=(Worker.objects.filter(is_alive=True)
+                         .exclude(last_heartbeat=None)),
                 test_suites=TestSuite.objects.all().order_by('name')
             ),
             context_instance=RequestContext(request))

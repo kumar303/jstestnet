@@ -43,6 +43,17 @@ class TestSystem(TestCase):
         r = self.client.get(reverse('system.status'))
         eq_(r.status_code, 200)
 
+    def test_status_page_ignores_partial_worker(self):
+        # Be sure a worker that has not fully started up
+        # isn't on status page
+        w = Worker()
+        w.last_heartbeat = None
+        w.is_alive = True
+        w.save()
+        r = self.client.get(reverse('system.status'))
+        eq_(r.status_code, 200)
+        eq_(list(r.context['workers']), [])
+
     def test_start_tests_with_no_workers(self):
         ts = create_ts()
         r = self.client.get(reverse('system.start_tests', args=['zamboni']),
@@ -51,6 +62,21 @@ class TestSystem(TestCase):
         data = json.loads(r.content)
         eq_(data['error'], True)
         eq_(data['message'], "No workers for u'firefox' are connected")
+
+    def test_start_tests_with_partial_worker(self):
+        ts = create_ts()
+        # Be sure a worker that has not fully started up doesn't get
+        # chosen for work:
+        w = Worker()
+        w.last_heartbeat = None
+        w.is_alive = True
+        w.save()
+        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
+                            data={'browsers': '*'})
+        eq_(r.status_code, 500)
+        data = json.loads(r.content)
+        eq_(data['error'], True)
+        eq_(data['message'], "No workers for u'*' are connected")
 
     def test_start_specific_worker(self):
         ts = create_ts()

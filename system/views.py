@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
+from django.views.decorators.csrf import csrf_view_exempt
 
 from common.stdlib import json
 from system.models import TestSuite, Token
@@ -140,6 +141,7 @@ def get_workers(qs, browser_spec):
 @json_view
 @post_required
 @transaction.commit_on_success()
+@csrf_view_exempt
 def start_tests(request):
     ts = get_object_or_404(TestSuite, slug=request.POST.get('name', None))
     token_is_valid = False

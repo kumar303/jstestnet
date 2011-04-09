@@ -8,14 +8,17 @@ from django.test import TestCase
 from nose.tools import eq_, raises
 
 from common.testutils import no_form_errors
-from system.models import TestSuite
+from system.models import TestSuite, Token
 from system.views import get_workers, NoWorkers
 from work.models import TestRun, TestRunQueue, WorkQueue, Worker
 from common.stdlib import json
 
 
-def create_ts():
-    return TestSuite.objects.create(name='Zamboni', slug='zamboni',
+def create_ts(name=None):
+    if not name:
+        name = 'Zamboni'
+    slug = name.lower()
+    return TestSuite.objects.create(name=name, slug=slug,
                                     url='http://server/qunit1.html')
 
 
@@ -56,8 +59,9 @@ class TestSystem(TestCase):
 
     def test_start_tests_with_no_workers(self):
         ts = create_ts()
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'browsers': 'firefox'})
+        token = Token.create(ts)
+        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
+                             data={'browsers': 'firefox', 'token': token})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -65,14 +69,15 @@ class TestSystem(TestCase):
 
     def test_start_tests_with_partial_worker(self):
         ts = create_ts()
+        token = Token.create(ts)
         # Be sure a worker that has not fully started up doesn't get
         # chosen for work:
         w = Worker()
         w.last_heartbeat = None
         w.is_alive = True
         w.save()
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'browsers': '*'})
+        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
+                             data={'browsers': '*', 'token': token})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -80,6 +85,7 @@ class TestSystem(TestCase):
 
     def test_start_specific_worker(self):
         ts = create_ts()
+        token = Token.create(ts)
         fx_worker = create_worker(
                     user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; '
                                'rv:2.0b10) Gecko/20100101 Firefox/4.0b10')
@@ -87,8 +93,8 @@ class TestSystem(TestCase):
                     user_agent='Mozilla/5.0 (Windows; U; Windows NT 5.2; '
                                'en-US) AppleWebKit/534.17 (KHTML, like Gecko)'
                                ' Chrome/11.0.652.0 Safari/534.17')
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'browsers': 'firefox=~*'})
+        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
+                             data={'browsers': 'firefox=~*', 'token': token})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
 
@@ -97,12 +103,51 @@ class TestSystem(TestCase):
         data = self.query(fx_worker)
         eq_(data['cmd'], 'run_test')
 
-    def test_get_job_result(self):
+    def test_start_tests_without_token(self):
         ts = create_ts()
         worker = create_worker()
 
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'browsers': 'firefox'})
+        r = self.client.post(reverse('system.start_tests', args=[ts.name]),
+                             data={'browsers': 'firefox'})
+        eq_(r.status_code, 500)
+        data = json.loads(r.content)
+        eq_(data['error'], True)
+        eq_(data['message'],
+            'Invalid or expired token sent to start_tests. '
+            'Contact an administrator.')
+
+    def test_start_tests_with_correct_token(self):
+        ts = create_ts()
+        worker = create_worker()
+        token = Token.create(ts)
+
+        r = self.client.post(reverse('system.start_tests', args=[ts.name]),
+                             data={'browsers': 'firefox', 'token': token})
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        assert 'test_run_id' in data, ('Unexpected: %s' % data)
+
+    def test_start_tests_with_wrong_token(self):
+        ts = create_ts('one')
+        other_ts = create_ts('two')
+        token = Token.create(other_ts)
+
+        r = self.client.post(reverse('system.start_tests', args=[ts.name]),
+                             data={'browsers': 'firefox', 'token': token})
+        eq_(r.status_code, 500)
+        data = json.loads(r.content)
+        eq_(data['error'], True)
+        eq_(data['message'],
+            'Invalid or expired token sent to start_tests. '
+            'Contact an administrator.')
+
+    def test_get_job_result(self):
+        ts = create_ts()
+        token = Token.create(ts)
+        worker = create_worker()
+
+        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
+                             data={'browsers': 'firefox', 'token': token})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         test_run_id = data['test_run_id']

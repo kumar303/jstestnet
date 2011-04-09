@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from nose.tools import eq_, raises
 
-from system.models import TestSuite
+from system.models import TestSuite, Token
 from work.models import Worker, WorkerEngine, TestRun, WorkQueue
 from work.views import collect_garbage
 from common.stdlib import json
@@ -30,6 +30,7 @@ class TestWork(TestCase):
         ts = TestSuite(name='Zamboni', slug='zamboni',
                        url='http://server/qunit1.html')
         ts.save()
+        token = Token.create(ts)
 
         # No work to fetch.
         r = self.client.post(reverse('work.query'),
@@ -39,8 +40,8 @@ class TestWork(TestCase):
         eq_(data['desc'], 'No commands from server.')
 
         # Simulate Hudson requesting a job:
-        r = self.client.get(reverse('system.start_tests', args=[ts.slug]),
-                            data={'browsers': 'firefox'})
+        r = self.client.post(reverse('system.start_tests', args=[ts.slug]),
+                             data={'browsers': 'firefox', 'token': token})
         eq_(r.status_code, 200)
 
         # Do work
@@ -139,8 +140,9 @@ class TestWorkResults(TestCase):
         ts = TestSuite(name='Zamboni', slug='zamboni',
                        url='http://server/qunit1.html')
         ts.save()
-        r = self.client.get(reverse('system.start_tests', args=['zamboni']),
-                            data={'browsers': 'firefox'})
+        token = Token.create(ts)
+        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
+                             data={'browsers': 'firefox', 'token': token})
         eq_(r.status_code, 200)
         r = self.client.post(reverse('work.query'),
                              dict(worker_id=worker.id, user_agent=user_agent))

@@ -16,6 +16,10 @@ class TestSuite(models.Model):
     last_modified = models.DateTimeField(auto_now=True, editable=False,
                                          null=True)
 
+    def active_tokens(self):
+        for tk in self.token_set.filter(active=True):
+            yield tk
+
 class Token(models.Model):
     token = models.TextField()
     test_suite = models.ForeignKey(TestSuite)

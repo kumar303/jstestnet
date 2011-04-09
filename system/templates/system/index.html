@@ -28,16 +28,13 @@
   <p>Number of available test suites: {{ test_suites.count }}</p>
   <ul>
     {% for ts in test_suites %}
-    <li>{{ ts.name }}
-      [<a class="start-tests" href="{% url system.start_tests ts.slug %}">
-                                    {% url system.start_tests ts.slug %}</a>]
-    </li>
+    <li>{{ ts.name }}</li>
     {% endfor %}
   </ul>
 </div>
 <div id="left">
   <ul class="nav">
-    <li><a href="{% url system.test_suites %}">Add a new test suite</a></li>
+    <li><a href="{% url system.test_suites %}">Manage test suites</a></li>
     <li><a href="https://github.com/kumar303/jstestnet">Source code for this site</a></li>
   </ul>
 </div>

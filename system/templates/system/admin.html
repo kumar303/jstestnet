@@ -31,6 +31,7 @@
     <th>Slug</th>
     <th>URL</th>
     <th>Actions</th>
+    <th>Tokens</th>
   </tr>
 {% for ts in test_suites %}
   <tr>
@@ -39,6 +40,13 @@
     <th><a href="{{ ts.url }}">{{ ts.url }}</a></th>
     <th><a href="{% url system.edit_test_suite ts.id %}">[edit]</a>
         <a href="{% url system.delete_test_suite ts.id %}">[delete]</a></th>
+    <th>
+      <ul>
+      {% for tk in ts.active_tokens %}
+        <li>{{ tk.token }}</li>
+      {% endfor %}
+      </ul>
+    </th>
   </tr>
 {% endfor %}
 </table>

@@ -329,12 +329,15 @@ class TestSystemAdmin(TestCase):
             datetime.now().timetuple()[0:3])
         eq_(ts.last_modified.timetuple()[0:3],
             datetime.now().timetuple()[0:3])
+        qs = Token.objects.filter(test_suite=ts, active=True)
+        assert qs.count(), 'A token was not created for the new test suite'
 
     def test_edit_test_suite(self):
         ts = TestSuite(name='Zamboni', slug='zamboni',
                        url='http://127.0.0.1:8001/qunit/')
         ts.save()
         orig_ts = ts
+        tokens = Token.objects.count()
         r = self.client.post(reverse('system.create_edit_test_suite',
                                      args=[ts.id]), {
             'name': 'Zamboni2',
@@ -350,6 +353,8 @@ class TestSystemAdmin(TestCase):
         eq_(ts.created.timetuple()[0:5],
             orig_ts.created.timetuple()[0:5])
         assert ts.last_modified != orig_ts.last_modified
+        # Make sure no new tokens were created
+        eq_(Token.objects.count(), tokens)
 
     def test_delete_test_suite(self):
         ts = TestSuite(name='Zamboni', slug='zamboni',

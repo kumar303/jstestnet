@@ -6,7 +6,7 @@ urlpatterns = patterns('',
         name='system.restart_workers'),
     url(r'^test/(?P<test_run_id>[0-9]+)/result$', views.test_result,
         name='system.test_result'),
-    url(r'^start_tests/(?P<name>[a-zA-Z_0-9-]+)$', views.start_tests,
+    url(r'^start_tests/?$', views.start_tests,
         name='system.start_tests'),
     # Not Django admin
     url(r'^admin/$', views.test_suites, name='system.test_suites'),

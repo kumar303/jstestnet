@@ -60,8 +60,9 @@ class TestSystem(TestCase):
     def test_start_tests_with_no_workers(self):
         ts = create_ts()
         token = Token.create(ts)
-        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
-                             data={'browsers': 'firefox', 'token': token})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox', 'token': token,
+                                   'name': ts.slug})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -76,8 +77,9 @@ class TestSystem(TestCase):
         w.last_heartbeat = None
         w.is_alive = True
         w.save()
-        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
-                             data={'browsers': '*', 'token': token})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': '*', 'token': token,
+                                   'name': ts.slug})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -93,8 +95,9 @@ class TestSystem(TestCase):
                     user_agent='Mozilla/5.0 (Windows; U; Windows NT 5.2; '
                                'en-US) AppleWebKit/534.17 (KHTML, like Gecko)'
                                ' Chrome/11.0.652.0 Safari/534.17')
-        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
-                             data={'browsers': 'firefox=~*', 'token': token})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox=~*', 'token': token,
+                                   'name': ts.slug})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
 
@@ -107,8 +110,8 @@ class TestSystem(TestCase):
         ts = create_ts()
         worker = create_worker()
 
-        r = self.client.post(reverse('system.start_tests', args=[ts.name]),
-                             data={'browsers': 'firefox'})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox', 'name': ts.slug})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -121,8 +124,9 @@ class TestSystem(TestCase):
         worker = create_worker()
         token = Token.create(ts)
 
-        r = self.client.post(reverse('system.start_tests', args=[ts.name]),
-                             data={'browsers': 'firefox', 'token': token})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox', 'token': token,
+                                   'name': ts.slug})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         assert 'test_run_id' in data, ('Unexpected: %s' % data)
@@ -132,8 +136,9 @@ class TestSystem(TestCase):
         other_ts = create_ts('two')
         token = Token.create(other_ts)
 
-        r = self.client.post(reverse('system.start_tests', args=[ts.name]),
-                             data={'browsers': 'firefox', 'token': token})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox', 'token': token,
+                                   'name': ts.slug})
         eq_(r.status_code, 500)
         data = json.loads(r.content)
         eq_(data['error'], True)
@@ -146,8 +151,9 @@ class TestSystem(TestCase):
         token = Token.create(ts)
         worker = create_worker()
 
-        r = self.client.post(reverse('system.start_tests', args=['zamboni']),
-                             data={'browsers': 'firefox', 'token': token})
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox', 'token': token,
+                                   'name': ts.slug})
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         test_run_id = data['test_run_id']

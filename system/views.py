@@ -133,8 +133,8 @@ def get_workers(qs, browser_spec):
 @json_view
 @post_required
 @transaction.commit_on_success()
-def start_tests(request, name):
-    ts = get_object_or_404(TestSuite, slug=name)
+def start_tests(request):
+    ts = get_object_or_404(TestSuite, slug=request.POST.get('name', None))
     token_is_valid = False
     if request.POST.get('token', None):
         if Token.is_valid(request.POST['token'], ts):

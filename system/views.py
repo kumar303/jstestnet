@@ -58,6 +58,13 @@ def delete_test_suite(request, pk):
     return http.HttpResponseRedirect(reverse('system.test_suites'))
 
 
+@staff_member_required
+def generate_token(request):
+    ts = get_object_or_404(TestSuite, pk=request.POST['test_suite_id'])
+    Token.create(ts)
+    return http.HttpResponseRedirect(reverse('system.test_suites'))
+
+
 @json_view
 def test_result(request, test_run_id):
     test_run = get_object_or_404(TestRun, pk=test_run_id)

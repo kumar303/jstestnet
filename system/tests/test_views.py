@@ -310,6 +310,8 @@ class TestSystemAdmin(TestCase):
         is_login_page(r)
         r = self.client.get(reverse('system.create_edit_test_suite'))
         is_login_page(r)
+        r = self.client.post(reverse('system.generate_token'))
+        is_login_page(r)
 
     def test_create_test_suite(self):
         r = self.client.get(reverse('system.test_suites'))
@@ -361,6 +363,17 @@ class TestSystemAdmin(TestCase):
                        url='http://127.0.0.1:8001/qunit/')
         ts.save()
         r = self.client.get(reverse('system.delete_test_suite',
-                                     args=[ts.id]))
+                                    args=[ts.id]))
         self.assertRedirects(r, reverse('system.test_suites'))
         eq_(TestSuite.objects.filter(slug='zamboni').count(), 0)
+        eq_(Token.objects.filter(test_suite=ts).count(), 0)
+
+    def test_generate_token(self):
+        ts = TestSuite(name='Zamboni', slug='zamboni',
+                       url='http://127.0.0.1:8001/qunit/')
+        ts.save()
+        r = self.client.post(reverse('system.generate_token'), {
+            'test_suite_id': ts.id
+        })
+        self.assertRedirects(r, reverse('system.test_suites'))
+        tk = Token.objects.get(test_suite=ts)

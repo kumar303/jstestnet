@@ -27,3 +27,13 @@ def json_view(f):
                                  content_type='application/json',
                                  status=status)
     return wrapper
+
+
+def post_required(f):
+    @functools.wraps(f)
+    def wrapper(request, *args, **kw):
+        if request.method != 'POST':
+            return http.HttpResponseNotAllowed(['POST'])
+        else:
+            return f(request, *args, **kw)
+    return wrapper

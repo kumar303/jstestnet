@@ -7,13 +7,18 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
+from django.views.decorators.csrf import csrf_view_exempt
 
 from common.stdlib import json
-from system.models import TestSuite
+from system.models import TestSuite, Token
 from system.forms import TestSuiteForm
-from common.decorators import json_view
+from common.decorators import json_view, post_required
 import work.views
 from work.models import Worker, WorkQueue, TestRun, TestRunQueue
+
+
+class InvalidToken(Exception):
+    """An invalid or expired token sent to start_tests."""
 
 
 @staff_member_required
@@ -51,6 +56,13 @@ def create_edit_test_suite(request, test_suite_id=None):
 def delete_test_suite(request, pk):
     ts = get_object_or_404(TestSuite, pk=pk)
     ts.delete()
+    return http.HttpResponseRedirect(reverse('system.test_suites'))
+
+
+@staff_member_required
+def generate_token(request):
+    ts = get_object_or_404(TestSuite, pk=request.POST['test_suite_id'])
+    Token.create(ts)
     return http.HttpResponseRedirect(reverse('system.test_suites'))
 
 
@@ -127,16 +139,26 @@ def get_workers(qs, browser_spec):
 
 
 @json_view
+@post_required
 @transaction.commit_on_success()
-def start_tests(request, name):
-    ts = get_object_or_404(TestSuite, slug=name)
+@csrf_view_exempt
+def start_tests(request):
+    ts = get_object_or_404(TestSuite, slug=request.POST.get('name', None))
+    token_is_valid = False
+    if request.POST.get('token', None):
+        if Token.is_valid(request.POST['token'], ts):
+            token_is_valid = True
+    if not token_is_valid:
+        raise InvalidToken('Invalid or expired token sent to start_tests. '
+                           'Contact an administrator.')
+
     work.views.collect_garbage()
     # TODO(kumar) don't start a test suite if it's already running.
     test = TestRun(test_suite=ts)
     test.save()
     workers = []
     qs = Worker.objects.filter(is_alive=True)
-    browsers = request.GET.get('browsers', None)
+    browsers = request.POST.get('browsers', None)
     if not browsers:
         raise ValueError("No browsers were specified in GET request")
     for worker in get_workers(qs, browsers):

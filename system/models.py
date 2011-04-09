@@ -1,4 +1,6 @@
 
+import uuid
+
 from django.db import models
 
 class TestSuite(models.Model):
@@ -13,3 +15,27 @@ class TestSuite(models.Model):
                                    null=True)
     last_modified = models.DateTimeField(auto_now=True, editable=False,
                                          null=True)
+
+    def active_tokens(self):
+        for tk in self.token_set.filter(active=True):
+            yield tk
+
+class Token(models.Model):
+    token = models.TextField()
+    test_suite = models.ForeignKey(TestSuite)
+    active = models.BooleanField(default=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False,
+                                   null=True)
+    last_modified = models.DateTimeField(auto_now=True, editable=False,
+                                         null=True)
+
+    @classmethod
+    def is_valid(cls, token, test_suite):
+        return cls.objects.filter(token=token, test_suite=test_suite,
+                                  active=True).count()
+
+    @classmethod
+    def create(cls, test_suite):
+        t = cls.objects.create(token=uuid.uuid4(), test_suite=test_suite,
+                               active=True)
+        return t.token

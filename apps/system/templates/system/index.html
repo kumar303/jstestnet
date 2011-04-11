@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set scripts = ('system',) %}
+
+{% block content %}
+
+<div id="right">
+  <p>There
+  {% if workers.count == 1 %}
+    is {{ workers.count() }} web browser
+  {% else %}
+    are {{ workers.count() }} web browsers
+  {% endif %}
+    connected and ready to
+    run JavaScript tests.</p>
+  <ul>
+    {% for worker in workers %}
+    <li>{{ worker.user_agent }}</li>
+    {% endfor %}
+  </ul>
+  <p>To add your web browser to the work pool, open this URL:
+    <a href="{{ url('work') }}">{{ url('work') }}</a>
+  </p>
+  <h2>Test Suites</h2>
+  <p>Number of available test suites: {{ test_suites.count() }}</p>
+  <ul>
+    {% for ts in test_suites %}
+    <li>{{ ts.name }}</li>
+    {% endfor %}
+  </ul>
+</div>
+<div id="left">
+  <ul class="nav">
+    <li><a href="{{ url('system.test_suites') }}">Manage test suites</a></li>
+    <li><a href="https://github.com/kumar303/jstestnet">Source code for this site</a></li>
+  </ul>
+</div>
+
+{% endblock %}

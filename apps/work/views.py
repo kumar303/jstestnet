@@ -4,6 +4,8 @@ from django.db import transaction
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 
+import jingo
+
 from common.stdlib import json
 from common.decorators import json_view
 from work.models import Worker, WorkQueue, TestRun
@@ -91,6 +93,4 @@ def work(request):
     collect_garbage()
     worker = Worker()
     worker.save()
-    return render_to_response('work/work.html',
-            {'worker_id': worker.id},
-            context_instance=RequestContext(request))
+    return jingo.render(request, 'work/work.html', {'worker_id': worker.id})

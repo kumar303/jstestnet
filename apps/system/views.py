@@ -9,13 +9,14 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 from django.views.decorators.csrf import csrf_view_exempt
 
+import jingo
+
+from common.decorators import json_view, post_required
 from common.stdlib import json
 from system.models import TestSuite, Token
 from system.forms import TestSuiteForm
-from common.decorators import json_view, post_required
-import work.views
 from work.models import Worker, WorkQueue, TestRun, TestRunQueue
-
+import work.views
 
 class InvalidToken(Exception):
     """An invalid or expired token sent to start_tests."""
@@ -28,12 +29,9 @@ def test_suites(request, test_suite_id=None, form=None):
                     TestSuite, pk=test_suite_id) if test_suite_id else None
     if not form:
         form = TestSuiteForm(instance=test_suite)
-    return render_to_response('system/admin.html', dict(
-                test_suites=test_suites,
-                form=form,
-                test_suite=test_suite
-            ),
-            context_instance=RequestContext(request))
+
+    data = dict(test_suites=test_suites, form=form, test_suite=test_suite)
+    return jingo.render(request, 'system/admin.html', data)
 
 
 @staff_member_required
@@ -184,9 +182,8 @@ def restart_workers(request):
 
 def status(request):
     work.views.collect_garbage()
-    return render_to_response('system/index.html', dict(
-                workers=(Worker.objects.filter(is_alive=True)
+
+    data = dict(workers=(Worker.objects.filter(is_alive=True)
                          .exclude(last_heartbeat=None)),
-                test_suites=TestSuite.objects.all().order_by('name')
-            ),
-            context_instance=RequestContext(request))
+                test_suites=TestSuite.objects.all().order_by('name'))
+    return jingo.render(request, 'system/index.html', data)

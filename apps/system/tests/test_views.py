@@ -316,7 +316,7 @@ class TestSystemAdmin(TestCase):
     def test_create_test_suite(self):
         r = self.client.get(reverse('system.test_suites'))
         eq_(r.status_code, 200)
-        assert 'form' in r.context[0]
+        assert 'form' in r.context
         r = self.client.post(reverse('system.create_edit_test_suite'), {
             'name': 'Zamboni',
             'slug': 'zamboni',

@@ -1,22 +1,18 @@
 {% extends "base.html" %}
-
-{% block head %}
-  <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.js"></script>
-  <script type="text/javascript" src="{{ MEDIA_URL }}js/system.js"></script>
-{% endblock %}
+{% set scripts = ('system',) %}
 
 {% block content %}
 
 <div id="right">
 
 {% if test_suite %}
-  <form action="{% url system.create_edit_test_suite test_suite.id %}" method="post">
+  <form action="{{ url('system.create_edit_test_suite', test_suite.id) }}" method="post">
 {% else %}
-  <form action="{% url system.create_edit_test_suite %}" method="post">
+  <form action="{{ url('system.create_edit_test_suite') }}" method="post">
 {% endif %}
+{{ csrf() }}
 <table>
-{{ form.as_table }}
-{% csrf_token %}
+  {{ form.as_table() }}
 </table>
 {% if test_suite %}
   <input type="submit" value="Edit test suite" />
@@ -38,16 +34,16 @@
     <th>{{ ts.name }}</th>
     <th>{{ ts.slug }}</th>
     <th><a href="{{ ts.url }}">{{ ts.url }}</a></th>
-    <th><a href="{% url system.edit_test_suite ts.id %}">[edit]</a>
-        <a href="{% url system.delete_test_suite ts.id %}">[delete]</a></th>
+    <th><a href="{{ url('system.edit_test_suite', ts.id) }}">[edit]</a>
+        <a href="{{ url('system.delete_test_suite', ts.id) }}">[delete]</a></th>
     <th>
       <ul>
-      {% for tk in ts.active_tokens %}
+      {% for tk in ts.active_tokens() %}
         <li>{{ tk.token }}</li>
       {% endfor %}
         <li>
-          <form method="post" action="{% url system.generate_token %}">
-            {% csrf_token %}
+          <form method="post" action="{{ url('system.generate_token') }}">
+            {{ csrf() }}
             <input type="hidden" name="test_suite_id" value="{{ ts.id }}"/>
             <button type="submit">Generate token</button>
           </form>

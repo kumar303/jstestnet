@@ -1,19 +1,24 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html LANG="{{ LANG }}" dir="{{ DIR }}">
 <head>
-  <title>JS TestNet</title>
-  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/minimalist/style.css" media="screen" />
-  <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/style.css" media="screen" />
-  {% block head %}{% endblock %}
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <title>{% block page_title %}JS TestNet{% endblock %}</title>
+  {{ css('common') }}
+  {% for style in styles %}
+    {{ css(style) }}
+  {% endfor %}
 </head>
 <body>
-<div id="header">
-  <h1>JS TestNet</h1>
-</div>
-<div id="content">
+  <div id="header">
+    <h1>JS TestNet</h1>
+  </div>
+  <div id="content">
+    {% block content %}{% endblock %}
+  </div>
 
-{% block content %}{% endblock %}
-
-</div>
+  {{ js('common') }}
+  {% for script in scripts %}
+    {{ js(script) }}
+  {% endfor %}
 </body>
 </html>

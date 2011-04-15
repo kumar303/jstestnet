@@ -28,7 +28,7 @@ class TestWork(TestCase):
         worker = Worker()
         worker.save()
         ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://server/qunit1.html')
+                       default_url='http://server/qunit1.html')
         ts.save()
         token = Token.create(ts)
 
@@ -52,7 +52,7 @@ class TestWork(TestCase):
         data = json.loads(r.content)
 
         eq_(data['cmd'], 'run_test')
-        eq_(data['args'][0]['url'], ts.url)
+        eq_(data['args'][0]['url'], ts.default_url)
         eq_(data['args'][0]['name'], ts.name)
         work_queue_id = data['args'][0]['work_queue_id']
 
@@ -139,7 +139,7 @@ class TestWorkResults(TestCase):
         worker.parse_user_agent(user_agent)
         worker.save()
         ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://server/qunit1.html')
+                       default_url='http://server/qunit1.html')
         ts.save()
         token = Token.create(ts)
         r = self.client.post(reverse('system.start_tests'),

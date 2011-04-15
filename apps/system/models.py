@@ -10,7 +10,7 @@ class TestSuite(models.Model):
     """
     name = models.CharField(max_length=150)
     slug = models.CharField(max_length=100)
-    url = models.CharField(max_length=255)
+    default_url = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True, editable=False,
                                    null=True)
     last_modified = models.DateTimeField(auto_now=True, editable=False,

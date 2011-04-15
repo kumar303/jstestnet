@@ -43,7 +43,7 @@ class Worker(models.Model):
             description='Running test suite.',
             cmd_args=json.dumps([{
                 'test_run_id': test.id,
-                'url': test.test_suite.url,
+                'url': test.url,
                 'name': test.test_suite.name
             }]),
         )
@@ -66,6 +66,7 @@ class WorkerEngine(models.Model):
 
 class TestRun(models.Model):
     test_suite = models.ForeignKey(TestSuite)
+    url = models.CharField(max_length=255)
     created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
 

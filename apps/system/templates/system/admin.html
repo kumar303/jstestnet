@@ -25,7 +25,7 @@
   <tr>
     <th>Name</th>
     <th>Slug</th>
-    <th>URL</th>
+    <th>Default URL</th>
     <th>Actions</th>
     <th>Tokens</th>
   </tr>
@@ -33,7 +33,7 @@
   <tr>
     <th>{{ ts.name }}</th>
     <th>{{ ts.slug }}</th>
-    <th><a href="{{ ts.url }}">{{ ts.url }}</a></th>
+    <th><a href="{{ ts.default_url }}">{{ ts.default_url }}</a></th>
     <th><a href="{{ url('system.edit_test_suite', ts.id) }}">[edit]</a>
         <a href="{{ url('system.delete_test_suite', ts.id) }}">[delete]</a></th>
     <th>

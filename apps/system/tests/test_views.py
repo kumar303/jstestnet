@@ -1,7 +1,6 @@
 
 from datetime import datetime
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -10,7 +9,7 @@ from nose.tools import eq_, raises
 from common.testutils import no_form_errors
 from system.models import TestSuite, Token
 from system.views import get_workers, NoWorkers
-from work.models import TestRun, TestRunQueue, WorkQueue, Worker
+from work.models import TestRun, Worker
 from common.stdlib import json
 
 
@@ -19,7 +18,7 @@ def create_ts(name=None):
         name = 'Zamboni'
     slug = name.lower()
     return TestSuite.objects.create(name=name, slug=slug,
-                                    url='http://server/qunit1.html')
+                                    default_url='http://server/qunit1.html')
 
 
 def create_worker(user_agent=None):
@@ -145,6 +144,22 @@ class TestSystem(TestCase):
         eq_(data['message'],
             'Invalid or expired token sent to start_tests. '
             'Contact an administrator.')
+
+    def test_start_tests_with_custom_url(self):
+        ts = create_ts()
+        token = Token.create(ts)
+        fx_worker = create_worker(
+                    user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; '
+                               'rv:2.0b10) Gecko/20100101 Firefox/4.0b10')
+        custom_url = 'http://custom.com/qunit'
+        r = self.client.post(reverse('system.start_tests'),
+                             data={'browsers': 'firefox=~*', 'token': token,
+                                   'name': ts.slug, 'url': custom_url})
+        eq_(r.status_code, 200)
+        data = json.loads(r.content)
+        test_run_id = data['test_run_id']
+        test_run = TestRun.objects.get(id=test_run_id)
+        eq_(custom_url, test_run.url)
 
     def test_get_job_result(self):
         ts = create_ts()
@@ -320,13 +335,13 @@ class TestSystemAdmin(TestCase):
         r = self.client.post(reverse('system.create_edit_test_suite'), {
             'name': 'Zamboni',
             'slug': 'zamboni',
-            'url': 'http://127.0.0.1:8001/qunit/'
+            'default_url': 'http://127.0.0.1:8001/qunit/'
         })
         no_form_errors(r)
         self.assertRedirects(r, reverse('system.test_suites'))
         ts = TestSuite.objects.get(slug='zamboni')
         eq_(ts.name, 'Zamboni')
-        eq_(ts.url, 'http://127.0.0.1:8001/qunit/')
+        eq_(ts.default_url, 'http://127.0.0.1:8001/qunit/')
         eq_(ts.created.timetuple()[0:3],
             datetime.now().timetuple()[0:3])
         eq_(ts.last_modified.timetuple()[0:3],
@@ -336,7 +351,7 @@ class TestSystemAdmin(TestCase):
 
     def test_edit_test_suite(self):
         ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://127.0.0.1:8001/qunit/')
+                       default_url='http://127.0.0.1:8001/qunit/')
         ts.save()
         orig_ts = ts
         tokens = Token.objects.count()
@@ -344,14 +359,14 @@ class TestSystemAdmin(TestCase):
                                      args=[ts.id]), {
             'name': 'Zamboni2',
             'slug': 'zamboni2',
-            'url': 'http://127.0.0.1:8001/qunit2/'
+            'default_url': 'http://127.0.0.1:8001/qunit2/'
         })
         no_form_errors(r)
         self.assertRedirects(r, reverse('system.test_suites'))
         ts = TestSuite.objects.get(pk=orig_ts.id)
         eq_(ts.name, 'Zamboni2')
         eq_(ts.slug, 'zamboni2')
-        eq_(ts.url, 'http://127.0.0.1:8001/qunit2/')
+        eq_(ts.default_url, 'http://127.0.0.1:8001/qunit2/')
         eq_(ts.created.timetuple()[0:5],
             orig_ts.created.timetuple()[0:5])
         assert ts.last_modified != orig_ts.last_modified
@@ -360,7 +375,7 @@ class TestSystemAdmin(TestCase):
 
     def test_delete_test_suite(self):
         ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://127.0.0.1:8001/qunit/')
+                       default_url='http://127.0.0.1:8001/qunit/')
         ts.save()
         r = self.client.get(reverse('system.delete_test_suite',
                                     args=[ts.id]))
@@ -370,7 +385,7 @@ class TestSystemAdmin(TestCase):
 
     def test_generate_token(self):
         ts = TestSuite(name='Zamboni', slug='zamboni',
-                       url='http://127.0.0.1:8001/qunit/')
+                       default_url='http://127.0.0.1:8001/qunit/')
         ts.save()
         r = self.client.post(reverse('system.generate_token'), {
             'test_suite_id': ts.id

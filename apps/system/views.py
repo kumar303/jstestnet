@@ -142,6 +142,7 @@ def get_workers(qs, browser_spec):
 @csrf_view_exempt
 def start_tests(request):
     ts = get_object_or_404(TestSuite, slug=request.POST.get('name', None))
+    url = request.POST.get('url') or ts.default_url
     token_is_valid = False
     if request.POST.get('token', None):
         if Token.is_valid(request.POST['token'], ts):
@@ -152,7 +153,7 @@ def start_tests(request):
 
     work.views.collect_garbage()
     # TODO(kumar) don't start a test suite if it's already running.
-    test = TestRun(test_suite=ts)
+    test = TestRun(test_suite=ts, url=url)
     test.save()
     workers = []
     qs = Worker.objects.filter(is_alive=True)

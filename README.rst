@@ -23,6 +23,7 @@ First, you need Python_ 2.5 or greater.  Clone this repository, create a
 virtualenv_, then cd into the project and run::
 
   pip install -r requirements.txt
+  pip install -r requirements/compiled.txt
 
 Make your own settings_local.py::
 
@@ -40,9 +41,19 @@ Then enter the credentials in settings_local.py::
   DATABASES['default']['USER'] = 'jstestnet_dev'
   DATABASES['default']['PASSWORD'] = 'test'
 
+Also in settings_local.py, uncomment the ``HMAC_KEYS`` setting and enter some
+unique value.
+
 Create the database::
 
   ./manage.py syncdb
+
+During the process, you will be prompted to create a superuser. You should do
+so, or run the ``createsuperuser`` management command later.
+
+::
+
+  ./manage.py createsuperuser
 
 Start the server and open the front page to see the system status.
 

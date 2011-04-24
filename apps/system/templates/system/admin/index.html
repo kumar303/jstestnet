@@ -1,10 +1,6 @@
-{% extends "base.html" %}
-{% set scripts = ('system',) %}
+{% extends "system/admin/base.html" %}
 
-{% block content %}
-
-<div id="right">
-
+{% block admin_content %}
 {% if test_suite %}
   <form action="{{ url('system.create_edit_test_suite', test_suite.id) }}" method="post">
 {% else %}
@@ -53,12 +49,4 @@
   </tr>
 {% endfor %}
 </table>
-
-</div>
-<div id="left">
-  <ul class="nav">
-    <li><a href="/">Home</a></li>
-  </ul>
-</div>
-
 {% endblock %}

@@ -149,6 +149,7 @@ MINIFY_BUNDLES = {
         'common': (
             'js/libs/jquery.js',
             'js/libs/json2.js',
+            'js/libs/socket.io.js',
         ),
         'system': (
             'js/system.js',

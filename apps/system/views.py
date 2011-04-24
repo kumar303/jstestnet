@@ -31,7 +31,7 @@ def test_suites(request, test_suite_id=None, form=None):
         form = TestSuiteForm(instance=test_suite)
 
     data = dict(test_suites=test_suites, form=form, test_suite=test_suite)
-    return jingo.render(request, 'system/admin.html', data)
+    return jingo.render(request, 'system/admin/index.html', data)
 
 
 @staff_member_required
@@ -188,3 +188,23 @@ def status(request):
                          .exclude(last_heartbeat=None)),
                 test_suites=TestSuite.objects.all().order_by('name'))
     return jingo.render(request, 'system/index.html', data)
+
+
+@staff_member_required
+def start_remote_debugger(request, worker_id):
+    work.views.collect_garbage()
+    worker = get_object_or_404(Worker, id=worker_id)
+    worker.start_debugging()
+    # TODO check is_alive?
+    # Cannot be a POST since user might need to login first (login redirect)
+    return http.HttpResponseRedirect(reverse('system.debug_in_worker',
+                                     args=[worker_id]))
+
+
+@staff_member_required
+def debug_in_worker(request, worker_id):
+    work.views.collect_garbage()
+    worker = get_object_or_404(Worker, id=worker_id)
+    # TODO check is_alive?
+    return jingo.render(request, 'system/admin/debug_in_worker.html',
+                        {'worker_id': worker_id})

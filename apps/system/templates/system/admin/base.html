@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% set scripts = ('system',) %}
+
+{% block content %}
+
+<div id="right">
+
+{% block admin_content %}
+{% endblock %}
+
+</div>
+<div id="left">
+  <ul class="nav">
+    <li><a href="/">Home</a></li>
+  </ul>
+</div>
+
+{% endblock %}

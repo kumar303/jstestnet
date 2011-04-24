@@ -1,0 +1,17 @@
+{% extends "system/admin/base.html" %}
+
+{% block extra_head %}
+<script type="text/javascript">
+  var WORKER_ID = {{ worker_id }};
+</script>
+{% endblock %}
+
+{% block admin_content %}
+<div id="debug-in-worker">
+  <p>Run JavaScript on Worker[{{ worker_id }}]</p>
+  <div id="log"></div>
+  <p id="console-area" class="loading">
+    > <input id="console" />
+  </p>
+</div>
+{% endblock %}

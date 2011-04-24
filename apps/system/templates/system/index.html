@@ -14,7 +14,9 @@
     run JavaScript tests.</p>
   <ul>
     {% for worker in workers %}
-    <li>{{ worker.user_agent }}</li>
+    <li>{{ worker.user_agent }}
+        <a href="{{ url('system.start_remote_debugger', worker.id) }}"
+           target="_blank">[enter remote debugger]</a></li>
     {% endfor %}
   </ul>
   <p>To add your web browser to the work pool, open this URL:

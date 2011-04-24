@@ -55,6 +55,42 @@ var cmds = {
     },
     change_rate: function( num ) {
         updateRate = parseInt( num );
+    },
+    start_debugging: function() {
+        var socket = new io.Socket(window.location.hostname,
+                                   {port: 8889,
+                                    resource: 'worker/' + workerId,
+                                    secure: false,  // TODO(Kumar) when we have SSL
+                                    transports: ['xhr-polling']});
+        socket.connect();
+
+        socket.on('connect', function() {
+            log('Connected to debug server');
+        });
+
+        socket.on('message', function(data) {
+            switch (data.action) {
+                case 'eval':
+                    try {
+                        eval('window.__eval = ' + data.code);
+                        sendEval(data.code, window.__eval);
+                    } catch (e) {
+                        sendEval(data.code, undefined, e);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        function sendEval(code, result, exception) {
+            result = {action: 'result', code: code,
+                      value: result,
+                      exception: exception && exception.toString()};
+            socket.send(result)
+        }
+
+        doWork();  // continue the loop
     }
 };
 

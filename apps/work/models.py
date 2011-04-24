@@ -51,6 +51,15 @@ class Worker(models.Model):
         tq = TestRunQueue(test_run=test, work_queue=q)
         tq.save()
 
+    def start_debugging(self):
+        q = WorkQueue(
+            worker=self,
+            cmd='start_debugging',
+            description='Server wants to start the debugger',
+            cmd_args=json.dumps([]),
+        )
+        q.save()
+
     @property
     def browser(self):
         engines = sorted(["%s/%s" % (e.engine, e.version)

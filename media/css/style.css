@@ -10,3 +10,27 @@ ul.nav li {
     -moz-border-radius: 12px;
     -webkit-border-radius: 12px;
 }
+
+#debug-in-worker #log p,
+#debug-in-worker #log pre,
+#debug-in-worker #log div {
+    margin: 0.1em;
+}
+
+#debug-in-worker #log {
+    margin-bottom: 0.3em;
+}
+
+#debug-in-worker #console-area {
+    margin: 0;
+}
+
+#debug-in-worker #console-area.loading input {
+    visibility: hidden;
+}
+
+#debug-in-worker #console-area.loading {
+    background-repeat: no-repeat;
+    background-position: 15px top;
+    background-image: url("ajax-loader.gif");
+}

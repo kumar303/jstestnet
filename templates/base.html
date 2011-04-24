@@ -7,6 +7,8 @@
   {% for style in styles %}
     {{ css(style) }}
   {% endfor %}
+  {% block extra_head %}
+  {% endblock %}
 </head>
 <body>
   <div id="header">

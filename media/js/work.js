@@ -150,7 +150,7 @@ function handleMessage(msg){
             var msg = obj.message;
             if(typeof(obj.actual) !== 'undefined' &&
                typeof(obj.expected) !== 'undefined') {
-                msg += '[actual="' + obj.actual + '" | expected="' + obj.expected + '"]';
+                msg += ' [actual="' + obj.actual + '" | expected="' + obj.expected + '"]';
             }
             testResults.tests.push({
                 module: testResults._current_module || '__jstestnet__',

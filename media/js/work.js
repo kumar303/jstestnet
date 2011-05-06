@@ -147,11 +147,16 @@ function handleMessage(msg){
             if (typeof(testResults.tests) === 'undefined') {
                 testResults.tests = [];
             }
+            var msg = obj.message;
+            if(typeof(obj.actual) !== 'undefined' &&
+               typeof(obj.expected) !== 'undefined') {
+                msg += '[actual="' + obj.actual + '" | expected="' + obj.expected + '"]';
+            }
             testResults.tests.push({
                 module: testResults._current_module || '__jstestnet__',
                 test: testResults._current_test || '__jstestnet__',
                 result: obj.result == 'true' ? true: false,
-                message: obj.message,
+                message: msg,
                 stacktrace: obj.stacktrace
             });
             break;

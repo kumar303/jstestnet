@@ -22,5 +22,11 @@ urlpatterns = patterns('',
         name='system.debug_in_worker'),
     url(r'^admin/start_remote_debugger/(\d+)$', views.start_remote_debugger,
         name='system.start_remote_debugger'),
+
+    # socket.io debug URLs:
+    url(r'^socket\.io', views.socketio, name='system.socketio'),
+    # url(r'^socket\.io/debug/(?P<worker_id>\d+)/(?P<transport>[^/]+).*$',
+    #     views.socketio_debug, name='system.socketio_debug'),
+
     url(r'^$', views.status, name='system.status'),
 )

@@ -249,3 +249,8 @@ TEST_RUNNER = 'test_utils.runner.RadicalTestSuiteRunner'
 
 LOGIN_URL = "/admin-contrib/"
 LOGOUT_URL = "/admin-contrib/logout"
+
+# For gevent socket.IO server
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB = 0

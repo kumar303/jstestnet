@@ -1,6 +1,10 @@
+import json
+import logging
 import random
+import traceback
 
 from django import http
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
@@ -9,7 +13,9 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 from django.views.decorators.csrf import csrf_view_exempt
 
+from gevent import Greenlet
 import jingo
+from redis import Redis
 
 from common.decorators import json_view, post_required
 from common.stdlib import json
@@ -17,6 +23,10 @@ from system.models import TestSuite, Token
 from system.forms import TestSuiteForm
 from work.models import Worker, WorkQueue, TestRun, TestRunQueue
 import work.views
+
+
+log = logging.getLogger()
+
 
 class InvalidToken(Exception):
     """An invalid or expired token sent to start_tests."""
@@ -208,3 +218,54 @@ def debug_in_worker(request, worker_id):
     # TODO check is_alive?
     return jingo.render(request, 'system/admin/debug_in_worker.html',
                         {'worker_id': worker_id})
+
+
+def redis_client():
+    return Redis(settings.REDIS_HOST, settings.REDIS_PORT, settings.REDIS_DB,
+                 socket_timeout=0.5)
+
+
+def socketio(request):
+    """socket.io communication layer currently used for debugging
+    JavaScript remotely on a worker.
+    """
+    io = request.environ['socketio']
+    redis_sub = redis_client().pubsub()
+
+    def sender(io):
+        while io.connected():
+            redis_sub.subscribe('channel')  # TODO(Kumar) pass in worker ID
+            for message in redis_sub.listen():
+                if message['type'] == 'message':
+                    msg = json.loads(message['data'])
+                    print 'SENDING MESSAGE: %s' % msg
+                    io.send(msg)
+
+    greenlet = Greenlet.spawn(sender, io)
+
+    # Listen to incoming messages from client.
+    try:
+        while io.connected():
+            message = io.recv()
+            if message:
+                msg = message[0]
+                print 'GOT MESSAGE: %s' % msg
+                action = msg.get('action')
+                if action == 'start_debug':
+                    redis_client().publish('channel',
+                                           json.dumps({'action': 'worker_connected',
+                                                       'worker_id': msg['worker_id']}))
+                elif action in ('eval', 'result'):
+                    # pass these results through as is
+                    redis_client().publish('channel', json.dumps(msg))
+                else:
+                    print 'Ignoring message: %s' % msg
+    except Exception, exc:
+        log.exception('RECEIVE EXCEPTION')
+        raise
+
+    # Disconnected...
+    redis_client().publish('channel', 'disconnected')
+    greenlet.throw(Greenlet.GreenletExit)
+
+    return HttpResponse()

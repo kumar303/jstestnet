@@ -59,16 +59,25 @@ var cmds = {
     start_debugging: function() {
         var socket = new io.Socket(window.location.hostname,
                                    {port: 8889,
-                                    resource: 'worker/' + workerId,
+                                    // resource: 'socket.io/worker/' + workerId,
+                                    resource: 'socket.io',
+                                    rememberTransport: false,
                                     secure: false,  // TODO(Kumar) when we have SSL
-                                    transports: ['xhr-polling']});
+                                    // transports: ['xhr-polling']
+                                    });
         socket.connect();
 
         socket.on('connect', function() {
             log('Connected to debug server');
+            socket.send({'action': 'start_debug', 'worker_id': workerId});
         });
 
         socket.on('message', function(data) {
+            if (data.worker_id != workerId) {
+                console.log('Ignoring message; wrong worker ID ' + data.worker_id);
+                // TODO(Kumar) this is dumb
+                return;
+            }
             switch (data.action) {
                 case 'eval':
                     try {
@@ -86,7 +95,8 @@ var cmds = {
         function sendEval(code, result, exception) {
             result = {action: 'result', code: code,
                       value: result,
-                      exception: exception && exception.toString()};
+                      exception: exception && exception.toString(),
+                      worker_id: workerId};
             socket.send(result)
         }
 

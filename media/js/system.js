@@ -13,9 +13,12 @@ function initDebugInWorker() {
         historyIdx = 0,
         socket = new io.Socket(window.location.hostname,
                                {port: 8889,
-                                resource: 'admin/' + workerId,
+                                // resource: 'socket.io/debug/' + workerId,
+                                resource: 'socket.io',
+                                rememberTransport: false,
                                 secure: false,  // TODO(Kumar) when we have SSL
-                                transports: ['xhr-polling']}),
+                                // transports: ['xhr-polling']
+                                }),
         keys = {ENTER: 13,
                 UP: 38,
                 DOWN: 40};
@@ -27,6 +30,11 @@ function initDebugInWorker() {
 
     socket.on('message', function(data) {
         var result;
+        if (data.worker_id != workerId) {
+            console.log('Ignoring message; wrong worker ID ' + data.worker_id);
+            // TODO(Kumar) this is dumb
+            return;
+        }
         switch (data.action) {
             case 'result':
                 $log.append('<p>> ' + data.code + '</p>');
@@ -44,6 +52,7 @@ function initDebugInWorker() {
                 $('#console-area input').focus();
                 break;
             default:
+                console.log('Unhandled message: (' + typeof(data) + ') action=' + data.action)
                 break;
         }
     });
@@ -54,7 +63,8 @@ function initDebugInWorker() {
             case keys.ENTER:
                 history.push($input.val());
                 socket.send({action: 'eval',
-                             code: $input.val()});
+                             code: $input.val(),
+                             worker_id: workerId});
                 $input.val('');
                 historyIdx = history.length;
                 e.preventDefault();

@@ -1,8 +1,13 @@
+import logging
+
 from django.db import models
 
 from system.models import TestSuite
 from common.stdlib import json
 from system.useragent import parse_useragent
+
+
+log = logging.getLogger('jstestnet')
 
 
 class Worker(models.Model):
@@ -25,7 +30,7 @@ class Worker(models.Model):
             return
         self.user_agent = user_agent
         for engine, version in parse_useragent(user_agent):
-            WorkerEngine(worker=self, engine=engine, version=version).save()
+            WorkerEngine.from_parsed_ua(self, engine, version)
 
     def restart(self):
         q = WorkQueue(
@@ -71,6 +76,17 @@ class WorkerEngine(models.Model):
     worker = models.ForeignKey(Worker, related_name='engines')
     engine = models.CharField(max_length=50, db_index=True)
     version = models.CharField(max_length=10)
+
+    @classmethod
+    def from_parsed_ua(cls, worker, engine, version):
+        if len(engine) > 50:
+            log.info('Engine from user agent too long %r (truncated)' % engine)
+            engine = engine[:50]
+        if len(version) > 10:
+            log.info('Version from user agent too long %r (truncated)' % version)
+            version = version[:10]
+        return cls.objects.create(worker=worker, engine=engine,
+                                  version=version)
 
 
 class TestRun(models.Model):

@@ -13,6 +13,11 @@ from system.useragent import parse_useragent
 
 class TestWork(test_utils.TestCase):
 
+    def suite(self):
+        url = 'http://server/qunit1.html'
+        return TestSuite.objects.create(name='Zamboni', slug='zamboni',
+                                        default_url=url)
+
     def test_start_work(self):
         r = self.client.get(reverse('work'))
         eq_(r.status_code, 200)
@@ -27,9 +32,7 @@ class TestWork(test_utils.TestCase):
                       'en-US; rv:1.9.2.12) Gecko/20101026 Firefox/3.6.12')
         worker = Worker()
         worker.save()
-        ts = TestSuite(name='Zamboni', slug='zamboni',
-                       default_url='http://server/qunit1.html')
-        ts.save()
+        ts = self.suite()
         token = Token.create(ts)
 
         # No work to fetch.
@@ -128,6 +131,19 @@ class TestWork(test_utils.TestCase):
         eq_(r.status_code, 200)
         data = json.loads(r.content)
         eq_(data['cmd'], 'restart')
+
+    def test_user_string_truncation(self):
+        user_agent = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) '
+                      'AppleWebKit/535.1 (KHTML, like Gecko) '
+                      'Chrome/13.0.782.215 Safari/535.1')
+        worker = Worker()
+        worker.save()
+        ts = self.suite()
+        token = Token.create(ts)
+        # This was raising a MySQL error
+        r = self.client.post(reverse('work.query'),
+                             dict(worker_id=worker.id, user_agent=user_agent))
+        eq_(r.status_code, 200)
 
 
 class TestWorkResults(test_utils.TestCase):

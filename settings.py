@@ -1,5 +1,6 @@
 # Django settings for jstestnet project.
 
+import logging
 import os
 
 from django.utils.functional import lazy
@@ -254,3 +255,23 @@ LOGOUT_URL = "/admin-contrib/logout"
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0
+
+LOG_LEVEL = logging.DEBUG
+LOGGING = {
+    'version': 1,
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'loggers': {
+        'jstestnet': {'handlers': ['console'], 'level': logging.INFO},
+    },
+}

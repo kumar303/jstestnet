@@ -5,7 +5,7 @@ from common.stdlib import json
 from django import http
 
 
-log = logging.getLogger()
+log = logging.getLogger('jstestnet')
 
 
 def json_view(f):

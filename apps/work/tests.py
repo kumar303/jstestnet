@@ -2,8 +2,8 @@
 from datetime import datetime, timedelta
 
 from django.core.urlresolvers import reverse
-from django.test import TestCase
 from nose.tools import eq_, raises
+import test_utils
 
 from system.models import TestSuite, Token
 from work.models import Worker, WorkerEngine, TestRun, WorkQueue
@@ -11,7 +11,7 @@ from work.views import collect_garbage
 from common.stdlib import json
 from system.useragent import parse_useragent
 
-class TestWork(TestCase):
+class TestWork(test_utils.TestCase):
 
     def test_start_work(self):
         r = self.client.get(reverse('work'))
@@ -130,7 +130,7 @@ class TestWork(TestCase):
         eq_(data['cmd'], 'restart')
 
 
-class TestWorkResults(TestCase):
+class TestWorkResults(test_utils.TestCase):
 
     def setUp(self):
         user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '

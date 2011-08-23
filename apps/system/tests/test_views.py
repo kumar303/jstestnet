@@ -3,8 +3,8 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.test import TestCase
 from nose.tools import eq_, raises
+import test_utils
 
 from common.testutils import no_form_errors
 from system.models import TestSuite, Token
@@ -32,7 +32,7 @@ def create_worker(user_agent=None):
     return worker
 
 
-class TestSystem(TestCase):
+class TestSystem(test_utils.TestCase):
 
     def query(self, worker):
         r = self.client.post(reverse('work.query'),
@@ -243,7 +243,7 @@ class TestSystem(TestCase):
         eq_(data['desc'], 'Server said restart. Goodbye!')
 
 
-class TestFilterByEngine(TestCase):
+class TestFilterByEngine(test_utils.TestCase):
 
     def setUp(self):
         for ua in [
@@ -305,7 +305,7 @@ class TestFilterByEngine(TestCase):
             [(u'msie', u'9.0')])
 
 
-class TestSystemAdmin(TestCase):
+class TestSystemAdmin(test_utils.TestCase):
 
     def setUp(self):
         a = User(username='admin', is_staff=True)

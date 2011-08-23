@@ -38,10 +38,15 @@ your Continuous Integration system.
 Install
 =======
 
-First, you need Python_ 2.6 or greater.  Clone this repository, create a
-virtualenv_, then cd into the project and run::
+First, you need Python_ 2.6 or greater. Clone this repository with the
+recursive flag and you'll get all necessary requirements in the vendor
+submodule::
 
-  pip install -r requirements.txt
+  git clone --recursive git://github.com/kumar303/jstestnet.git
+
+There are a few Python modules to compile after that so create a
+virtualenv_ and run::
+
   pip install -r requirements/compiled.txt
 
 Make your own settings_local.py::
@@ -80,8 +85,12 @@ Start the server and open the front page to see the system status.
 
   ./manage.py runserver
 
+JS TestNet is based on Playdoh_ and Django_. You can find tons of docs at
+both of those project sites.
+
 .. _Python: http://python.org/
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv
+.. _Playdoh: http://playdoh.readthedocs.org/
 
 Adding a Test Suite
 ===================

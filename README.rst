@@ -21,10 +21,10 @@ How Does It Work?
 
 JS TestNet lets you turn any web browser into a JavaScript test runner. You
 control everything through a client (like `JsTestNetLib`_); the client talks
-to the server so it doesn't have to run on the same machine as any web
+to the server and it doesn't have to run on the same machine as any web
 browser.
 
-Here is an example screenshot of Firefox and Chrome simultaneously running a
+Here is a screenshot of Firefox and Chrome simultaneously running a
 QUnit based test suite. You can see a script running in a terminal to kick off
 the tests and collect results.
 
@@ -38,7 +38,7 @@ your Continuous Integration system.
 Install
 =======
 
-First, you need Python_ 2.5 or greater.  Clone this repository, create a
+First, you need Python_ 2.6 or greater.  Clone this repository, create a
 virtualenv_, then cd into the project and run::
 
   pip install -r requirements.txt
@@ -153,8 +153,9 @@ check for results at::
 Python Client
 =============
 
-Check out `JsTestNetLib`_! This implements a Nose plugin to start tests and
-report the successes and failures.
+Check out `JsTestNetLib`_! This makes all the HTTP requests necessary to start
+tests and receive results from all browsers. It also implements a Nose (test
+runner) plugin for convenience.
 
 Server Protocol
 ===============

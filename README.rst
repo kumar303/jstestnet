@@ -16,6 +16,25 @@ test runners too.
 .. contents::
       :local:
 
+How Does It Work?
+=================
+
+JS TestNet lets you turn any web browser into a JavaScript test runner. You
+control everything through a client (like `JsTestNetLib`_); the client talks
+to the server so it doesn't have to run on the same machine as any web
+browser.
+
+Here is an example screenshot of Firefox and Chrome simultaneously running a
+QUnit based test suite. You can see a script running in a terminal to kick off
+the tests and collect results.
+
+.. image:: http://kumar303.github.com/jstestnet/jstestnet-screenshot.png
+
+This screenshot was taken with a local development install of the JS Test Net
+server. In a real world situation you'd probably run each web browser in a
+headless virtual machine and you'd start the tests using the shell as part of
+your Continuous Integration system.
+
 Install
 =======
 
@@ -31,9 +50,9 @@ Make your own settings_local.py::
 
 Set up a MySQL user and database::
 
-  mysql> create user jstestnet_dev@localhost identified by 'test';
-  mysql> create database jstestnet_dev;
-  mysql> grant all on jstestnet_dev.* to jstestnet_dev;
+  create user jstestnet_dev@localhost identified by 'test';
+  create database jstestnet_dev;
+  grant all on jstestnet_dev.* to jstestnet_dev;
 
 Then enter the credentials in settings_local.py::
 
@@ -108,12 +127,14 @@ browser and go to this URL and leave the window open::
 
   http://127.0.0.1:8000/work/
 
-The worker will be able to run tests for as long as you keep that window open.
-In a CI environment you probably want to open this once in a virtual machine
+That's it!  No complicated start / stop commands are necessary.
+The worker will be able to run tests for as long as you keep that window open
+using Ajax polling to talk to the server.
+In a CI environment you could just open this URL once in a virtual machine
 and forget all about it.
 
-You can open this URL on any web enabled device and it will automatically join
-the work pool.  For example, you could type this URL into your smart phone and
+In fact, you can open this URL on any web enabled device.  For example, you
+could type this URL into your smart phone and
 your phone would become a worker.
 
 Running Tests
@@ -132,7 +153,14 @@ check for results at::
 Python Client
 =============
 
-Check out `JsTestNetLib <https://github.com/kumar303/jstestnetlib>`_!
+Check out `JsTestNetLib`_! This implements a Nose plugin to start tests and
+report the successes and failures.
+
+Server Protocol
+===============
+
+It's somewhat in flux at the moment so your best bet is to read the
+`JsTestNetLib`_ source.
 
 Credits
 =======
@@ -171,3 +199,5 @@ To-Do
 - Handle unexpected errors in the worker
 - Add some kind of secure test execution to prevent DoS.  Probably a simple
   token based thing.
+
+.. _`JsTestNetLib`: https://github.com/kumar303/jstestnetlib

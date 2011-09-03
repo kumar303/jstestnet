@@ -26,6 +26,13 @@
         window.top.postMessage(msg, '*');
     }
 
+    function replaceChars(aStr) {
+        aStr = aStr.replace(/&amp;/g, '&');
+        aStr = aStr.replace(/&gt;/g, '>');
+        aStr = aStr.replace(/&lt;/g, '<');
+        aStr = aStr.replace(/<[^>]+>/g, '');
+        return aStr;
+    }
     window.onerror = function(errorMsg, url, lineNumber) {
         var msg = {
             action: 'log',
@@ -37,10 +44,54 @@
         };
         postMsg(msg);
     };
+    
 
+    if ( typeof doctest !== "undefined") {
+        this.doctestReporterHook = {
+            init : function (reporter,verbosity) {
+                postMsg({
+                        action: 'hello',
+                        user_agent: navigator.userAgent
+                });
+            },
+            reportSuccess : function (example, output) {
+                var example_out = replaceChars(example.output);
+                var output_out = replaceChars(output);
+                var msg = {
+                            action: 'log',
+                            result: "pass",
+                            message: example.htmlID,
+                            stacktrace: null
+                };
+                msg.actual = output_out;
+                msg.expected = example_out;
+                postMsg(msg);
+            },
+            reportFailure : function (example, output) {
+                var example_out = replaceChars(example.output);
+                var output_out = replaceChars(output);
+                var msg = {
+                            action: 'log',
+                            result: "fail",
+                            message: example.htmlID,
+                            stacktrace: null
+                };
+                msg.actual = output_out;
+                msg.expected = example_out;
+                postMsg(msg);
+            }, 
+            finish: function(reporter) {
+                postMsg({
+                    action: 'done',
+                    failures: reporter.failure,
+                    total: reporter.failure + reporter.success
+                });
+            }
+        };
+    }
     // QUnit (jQuery)
     // http://docs.jquery.com/QUnit
-    if ( typeof QUnit !== "undefined" ) {
+    else if ( typeof QUnit !== "undefined" ) {
 
         QUnit.begin = function() {
             postMsg({
@@ -50,14 +101,6 @@
         };
 
         QUnit.done = function(failures, total) {
-            // // Clean up the HTML (remove any un-needed test markup)
-            // $("nothiddendiv").remove();
-            // $("loadediframe").remove();
-            // $("dl").remove();
-            // $("main").remove();
-            //
-            // // Show any collapsed results
-            // $('ol').show();
 
             postMsg({
                 action: 'done',
@@ -66,8 +109,11 @@
             });
         };
 
-        QUnit.log = function(result, message, details) {
+        QUnit.log = function(details) {
             // Strip out html:
+            var message = details.message;
+            var result = details.result;
+          
             message = message.replace(/&amp;/g, '&');
             message = message.replace(/&gt;/g, '>');
             message = message.replace(/&lt;/g, '<');

@@ -128,6 +128,19 @@ header like this::
 
 .. _window.postMessage: https://developer.mozilla.org/en/dom/window.postmessage
 
+Supported Test Runners
+======================
+
+The existing adapter currently supports these JavaScript test runners:
+
+- `Qunit`_
+- `doctest.js`_
+
+.. _`doctest.js`: http://ianb.github.com/doctestjs/
+
+It's pretty simple to add a new adapter. Check out ``adapter/jstestnet.js``
+in the source.
+
 Adding a Web Browser
 ====================
 
@@ -146,31 +159,146 @@ In fact, you can open this URL on any web enabled device.  For example, you
 could type this URL into your smart phone and
 your phone would become a worker.
 
-Running Tests
-=============
-
-To start your test suite on all web browsers, just request this URL from curl
-or a custom script (more on that later)::
-
-  http://127.0.0.1:8000/start_tests/foo
-
-That will return a JSON response of who is working on your tests.  You can
-check for results at::
-
-  http://127.0.0.1:8000/job/{id}/result
-
-Python Client
-=============
-
-Check out `JsTestNetLib`_! This makes all the HTTP requests necessary to start
-tests and receive results from all browsers. It also implements a Nose (test
-runner) plugin for convenience.
-
-Server Protocol
+Client Protocol
 ===============
 
-It's somewhat in flux at the moment so your best bet is to read the
-`JsTestNetLib`_ source.
+A client is the controller for running tests.  It communicates via HTTP with
+the server to start tests in remote web browsers and fetch results.
+
+**POST /start_tests/**
+
+Request this URL to start tests in some browsers. POST parameters:
+
+**browsers**
+  A comma separated list of browser specs to run tests against. See the
+  browser spec format documented below.
+**name**
+  The registered name of the test suite. This is what you set up in the
+  administration site.
+**token**
+  A security token (obtained from the administration site) that authorizes
+  the client to start tests.
+
+The response is a JSON object with the following structure::
+
+  {'error': true || false,
+   'message': 'informative message',
+   'test_run_id': <numeric ID of test run>}
+
+**GET /test/<test_run_id>/result**
+
+Request this URL to check on the status of the tests you started.
+The response is a JSON object with the following structure::
+
+  {'finished': true || false,  // true if all tests are finished running
+   'results': [{'worker_user_agent': <user agent string>,
+                'browser': <parsed browser spec>,  // e.g. firefox/3.6.12, gecko/1.9.2.12,
+                'module': 'Name of test module',
+                'test': 'Name of test',
+                'result': true || false,  // true if the test passed
+                'stacktrace: 'traceback to code',  // if supported
+                'message': 'some assertion...'}, ...]
+
+Client Implementations
+======================
+
+- `JsTestNetLib`_
+
+  - Python client that makes all the HTTP requests necessary to start
+    tests and receive results from all browsers. It also implements a Nose
+    (test runner) plugin for convenience.
+
+Browser specs
+=============
+
+A browser spec is a string that the client submits in order to specify
+which browsers should run the tests.  In its simplest form it looks like
+this, always lower case::
+
+  firefox,chrome
+
+This spec will run tests in **both** Firefox and Chrome at whatever version is
+available. To specify a specific browser version, use the equal-tilde
+operator::
+
+  firefox=~3
+
+This will match any version of Firefox 3, such as 3.6 or 3.5.  You can limit
+Firefox to the 3.6 branch by specifying::
+
+  firefox=~3.6
+
+To run tests on many browsers, just list as many as you need::
+
+  firefox=~3.6,firefox=~6,chrome=~11,chrome=~12
+
+Browser specs are parsed from the parts of a user agent string that are
+separated by a forward slash. For example, consider the Firefox mobile user
+agent::
+
+  Mozilla/5.0 (X11; U; Linux armv61; en-US; rv:1.9.1b2pre) Gecko/20081015 Fennec/1.0a1
+
+You could select this worker with a browser spec of ``fennec=~1.0``.
+
+There are a few exceptions:
+
+  - To access mobile safari and not desktop safari
+    you can say ``mobile-safari=~528.16``
+  - Because the Gecko version is oddly specified as ``rv`` there is an alias.
+    For example, in a user string containing
+    ``rv:1.9.2.13 ... Gecko/20101203``
+    you would specify this version of Gecko as ``gecko=~1.9.2.13``.
+
+Worker Protocol
+===============
+
+Browser workers communicate with the server via HTTP to fetch test requests
+and submit test results.
+
+**GET /work/**
+
+Request this URL in a browser to load all the JavaScript necessary to
+become a worker.  Once loaded, the page will poll the server continuously.
+
+**POST /work/query**
+
+Request this URL to see if there are any tests to run. POST parameters:
+
+**worker_id**
+  Numeric ID that was assigned to the worker upon the first GET.
+
+**user_agent**
+  Full user agent string of the browser.
+
+The response is a JSON object with the following structure::
+
+  {'cmd': 'command name',  // e.g. run_test
+   'args': [{'work_queue_id': <numeric ID>,
+             ...}], // arguments specific to the command
+   'desc': 'Description of command'}
+
+**POST /work/submit_results**
+
+Request this URL to submit the results of a test run. POST parameters:
+
+**work_queue_id**
+  Numeric ID assigned to the unit of work.
+
+**results**
+  JSON result object with the following structure:
+
+::
+
+  {'failures': 0,
+   'total': 1,  // total tests run
+   'tests': [{'test': 'Name of test',
+              'module': 'Name of test module',
+              'result': true || false,  // true if the test passed
+              'message': 'some assertion...'}]}
+
+The response is a JSON object with the following structure::
+
+  {'desc': 'Test result received'}
 
 Credits
 =======
@@ -204,8 +332,7 @@ Once you've installed everything just run the tests like this::
 To-Do
 =====
 
-- Handle unexpected errors in the worker
-- Add some kind of secure test execution to prevent DoS.  Probably a simple
-  token based thing.
+- Handle unexpected errors in the worker better.
+- Add dynamic browser specs like ``firefox:latest``.
 
 .. _`JsTestNetLib`: https://github.com/kumar303/jstestnetlib

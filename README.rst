@@ -85,6 +85,8 @@ Start the server and open the front page to see the system status.
 
   ./manage.py runserver
 
+Now you'll have a development server running at ``http://localhost:8000``.
+
 JS TestNet is based on Playdoh_ and Django_. You can find tons of docs at
 both of those project sites.
 
@@ -147,7 +149,7 @@ Adding a Web Browser
 To register a web browser to run the tests (called a worker) just open the
 browser and go to this URL and leave the window open::
 
-  http://127.0.0.1:8000/work/
+  http://your-jstestnet-server/work/
 
 That's it!  No complicated start / stop commands are necessary.
 The worker will be able to run tests for as long as you keep that window open
@@ -242,12 +244,12 @@ You could select this worker with a browser spec of ``fennec=~1.0``.
 
 There are a few exceptions:
 
-  - To access mobile safari and not desktop safari
-    you can say ``mobile-safari=~528.16``
-  - Because the Gecko version is oddly specified as ``rv`` there is an alias.
-    For example, in a user string containing
-    ``rv:1.9.2.13 ... Gecko/20101203``
-    you would specify this version of Gecko as ``gecko=~1.9.2.13``.
+- To access mobile safari and not desktop safari
+  you can say ``mobile-safari=~528.16``
+- Because the Gecko version is oddly specified as ``rv`` there is an alias.
+  For example, in a user string containing
+  ``rv:1.9.2.13 ... Gecko/20101203``
+  you would specify this version of Gecko as ``gecko=~1.9.2.13``.
 
 Worker Protocol
 ===============

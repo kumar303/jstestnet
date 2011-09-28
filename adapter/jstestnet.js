@@ -72,7 +72,6 @@
                   action: 'set_test',
                   name: example.htmlID
                 });
-                console.log('example.output' + example.output);
                 msg.actual = output_out;
                 msg.expected = example_out;
                 postMsg(msg);

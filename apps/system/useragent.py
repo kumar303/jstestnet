@@ -29,6 +29,21 @@ class Gecko(Engine):
             return []
 
 
+class Opera(Engine):
+
+    def __init__(self):
+        super(Opera, self).__init__(r'version/(?P<version>[0-9a-z\.]+)')
+
+    def search(self, ua):
+        results = super(Opera, self).search(ua)
+        if ua.find('opera') != -1:
+            for res in results:
+                res['name'] = 'opera'
+            return results
+        else:
+            return []
+
+
 class StdEngine(Engine):
 
     def __init__(self, name):
@@ -80,6 +95,7 @@ engines = [
     StdEngine('fennec'),
     StdEngine('chrome'),
     SafariVariants(),
+    Opera(),
     StdEngine('android'),
     StdEngine('msie'),
     StdEngine('webos'),

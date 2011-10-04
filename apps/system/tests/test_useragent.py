@@ -62,6 +62,9 @@ def test_useragents():
         ('BlackBerry9630/4.7.1.40 Profile/MIDP-2.0 Configuration/CLDC-1.1 '
          'VendorID/105',
          [('blackberry9630', '4.7.1.40')]),
+        # Opera:
+        ('Opera/9.80 (X11; Linux i686; U; en) Presto/2.9.168 Version/11.51',
+         [('opera', '11.51'), ('presto', '2.9.168')]),
     ):
         yield _verify_ua, ua, expectation
 

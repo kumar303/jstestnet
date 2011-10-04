@@ -31,6 +31,7 @@
         aStr = aStr.replace(/&gt;/g, '>');
         aStr = aStr.replace(/&lt;/g, '<');
         aStr = aStr.replace(/<[^>]+>/g, '');
+				aStr = aStr.replace(/\n/g,'');
         return aStr;
     }
     window.onerror = function(errorMsg, url, lineNumber) {
@@ -53,16 +54,24 @@
                         action: 'hello',
                         user_agent: navigator.userAgent
                 });
+								postMsg({
+                				action: 'set_module',
+                				name: window.location.pathname
+            		});
             },
             reportSuccess : function (example, output) {
                 var example_out = replaceChars(example.output);
                 var output_out = replaceChars(output);
                 var msg = {
                             action: 'log',
-                            result: "pass",
+                            result: true,
                             message: example.htmlID,
                             stacktrace: null
                 };
+                postMsg({
+                  action: 'set_test',
+                  name: example.htmlID
+                });
                 msg.actual = output_out;
                 msg.expected = example_out;
                 postMsg(msg);
@@ -72,7 +81,7 @@
                 var output_out = replaceChars(output);
                 var msg = {
                             action: 'log',
-                            result: "fail",
+                            result: false,
                             message: example.htmlID,
                             stacktrace: null
                 };

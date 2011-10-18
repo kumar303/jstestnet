@@ -161,6 +161,35 @@ In fact, you can open this URL on any web enabled device.  For example, you
 could type this URL into your smart phone and
 your phone would become a worker.
 
+Setting Up Your Firewall
+========================
+
+To understand the networking needed to use jstestnet, here is a diagram of a
+typical configuration. The counterintuitive surprise here is that only the
+TestWorker (the web browser) needs to connect to the web server that serves
+your HTML test suite. JsTestNet does *not* need to load your test suite.
+
+.. image:: http://kumar303.github.com/jstestnet/jstestnet-network.png
+
+- **JsTestNet**
+
+  - The server running the Django app. This responds to requests from clients
+    and workers.
+
+- **Jenkins**
+
+  - Your continuous integration server.  This will typically execute tests
+    that invoke a client that talks to JsTestNet.  In this configuration it
+    *also* runs a web server that serves the HTML Qunit suite at
+    ``http://<jenkins>:9878/qunit``
+
+- **TestWorker**
+
+  - This is a web browser that loads the worker page from JsTestNet *once*.
+    After that it polls the server with Ajax and fetches the Qunit test suite
+    in an iframe.
+
+
 Client Protocol
 ===============
 

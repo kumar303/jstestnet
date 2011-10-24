@@ -14,6 +14,7 @@ class Worker(models.Model):
     user_agent = models.CharField(max_length=255)
     last_heartbeat = models.DateTimeField(null=True)
     is_alive = models.BooleanField(default=True)
+    ip_address = models.CharField(max_length=200, null=True)
     created = models.DateTimeField(auto_now_add=True)
 
     def get_engine(self, name):

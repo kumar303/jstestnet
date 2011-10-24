@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.getcwd())  # add project root, to import settings_local
+
 # For database migrations
 import settings_local as settings
 

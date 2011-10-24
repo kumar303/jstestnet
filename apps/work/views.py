@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 
 from django.db import transaction
 from django.shortcuts import render_to_response, get_object_or_404
@@ -9,6 +10,9 @@ import jingo
 from common.stdlib import json
 from common.decorators import json_view
 from work.models import Worker, WorkQueue, TestRun
+
+
+log = logging.getLogger('jstestnet')
 
 
 def collect_garbage():
@@ -92,5 +96,10 @@ def submit_results(request):
 def work(request):
     collect_garbage()
     worker = Worker()
+    ip = request.META.get('REMOTE_ADDR')
+    if ip:
+        log.info('Worker started at %s' % ip)
+        ip = ip[0:200]
+        worker.ip_address = ip
     worker.save()
     return jingo.render(request, 'work/work.html', {'worker_id': worker.id})

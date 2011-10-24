@@ -26,6 +26,7 @@ class TestWork(test_utils.TestCase):
         eq_(worker.created.timetuple()[0:3],
             datetime.now().timetuple()[0:3])
         eq_(worker.last_heartbeat, None)
+        eq_(worker.ip_address, '127.0.0.1')
 
     def test_work(self):
         user_agent = ('Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; '

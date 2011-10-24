@@ -8,7 +8,7 @@ import test_utils
 
 from common.testutils import no_form_errors
 from system.models import TestSuite, Token
-from system.views import get_workers, NoWorkers
+from system.views import get_workers, NoWorkers, BrowserSpecError
 from work.models import TestRun, Worker
 from common.stdlib import json
 
@@ -273,6 +273,14 @@ class TestFilterByEngine(test_utils.TestCase):
             [(u'firefox', u'3.6.13'), (u'gecko', u'1.9.2.13')])
         eq_(self.filter('firefox=~3'),
             [(u'firefox', u'3.6.13'), (u'gecko', u'1.9.2.13')])
+
+    def test_latest(self):
+        eq_(self.filter('firefox:latest'),
+            [(u'firefox', u'4.0b7pre'), (u'gecko', u'2.0b7pre')])
+
+    @raises(BrowserSpecError)
+    def test_unknown_filter(self):
+        self.filter('firefox:spaceballs')
 
     def test_firefox_all(self):
         eq_(self.filter('firefox'),

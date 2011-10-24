@@ -242,9 +242,8 @@ Client Implementations
 Browser specs
 =============
 
-A browser spec is a string that the client submits in order to specify
-which browsers should run the tests.  In its simplest form it looks like
-this, always lower case::
+A browser spec is how the client specifies which browsers should run the
+tests. In its simplest form it looks like this::
 
   firefox,chrome
 
@@ -252,16 +251,16 @@ This spec will run tests in **both** Firefox and Chrome at whatever version is
 available. To specify a specific browser version, use the equal-tilde
 operator::
 
-  firefox=~3
+  firefox=~7
 
-This will match any version of Firefox 3, such as 3.6 or 3.5.  You can limit
-Firefox to the 3.6 branch by specifying::
+This will match any version of Firefox 7, such as 7.0 or 7.1.  You can limit
+Firefox to the 7.1 branch by specifying::
 
-  firefox=~3.6
+  firefox=~7.1
 
 To run tests on many browsers, just list as many as you need::
 
-  firefox=~3.6,firefox=~6,chrome=~11,chrome=~12
+  firefox=~7,firefox=~8,chrome=~11,chrome=~12
 
 Browser specs are parsed from the parts of a user agent string that are
 separated by a forward slash. For example, consider the Firefox mobile user
@@ -270,6 +269,13 @@ agent::
   Mozilla/5.0 (X11; U; Linux armv61; en-US; rv:1.9.1b2pre) Gecko/20081015 Fennec/1.0a1
 
 You could select this worker with a browser spec of ``fennec=~1.0``.
+
+There is a special name-colon syntax to filter browsers. It looks like this::
+
+  firefox:latest
+
+This will return the latest version of Firefox after doing a basic
+alphanumeric sort on the version string.
 
 There are a few exceptions:
 
@@ -364,6 +370,6 @@ To-Do
 =====
 
 - Handle unexpected errors in the worker better.
-- Add dynamic browser specs like ``firefox:latest``.
+- Port polling Ajax in worker to something simpler like socket.io
 
 .. _`JsTestNetLib`: https://github.com/kumar303/jstestnetlib

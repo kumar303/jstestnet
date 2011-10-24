@@ -103,6 +103,10 @@ def test_result(request, test_run_id):
     return {'finished': test_run.is_finished(), 'results': all_results}
 
 
+class BrowserSpecError(Exception):
+    """A problem handling the browser spec."""
+
+
 class NoWorkers(Exception):
     """No workers are available for the request."""
 
@@ -115,17 +119,34 @@ def select_engine_workers(all_workers, name):
         engines.setdefault(k, [])
         engines[k].append(worker)
     for version, pool in engines.items():
-        # We only need on worker per engine/version.
+        # We only need one worker per engine/version.
         # TODO(Kumar) implement a better round-robin here, maybe one
         # that excludes busy workers:
         yield random.choice(pool)
+
+
+def filter_workers(processor, workers):
+    """Given the list of workers, return a new list."""
+    if processor == 'latest':
+        by_version = []
+        for wrk in workers:
+            for eng in wrk.engines.all():
+                by_version.append((eng.version, wrk))
+        by_version.sort()  # alphanumeric sort by version
+        return [wrk for (ver, wrk) in by_version[-1:]]  # last worker
+    else:
+        raise BrowserSpecError('Unknown browser spec :%s' % processor)
 
 
 def get_workers(qs, browser_spec):
     workers = []
     for spec in browser_spec.lower().split(','):
         spec = spec.strip()
-        if '=~' in spec:
+        processor = None
+        if ':' in spec:
+            name, processor = spec.split(':')
+            version = '*'
+        elif '=~' in spec:
             name, version = spec.split('=~')
         else:
             name = spec
@@ -135,10 +156,12 @@ def get_workers(qs, browser_spec):
             matches = list(qs.all().filter(engines__engine=name))
         else:
             matches = list(qs.all().filter(
-                            engines__engine=name,
-                            engines__version__istartswith=version))
+                                    engines__engine=name,
+                                    engines__version__istartswith=version))
         if len(matches) == 0:
             raise NoWorkers("No workers for %r are connected" % spec)
+        if processor:
+            matches = filter_workers(processor, matches)
         # Make a pool of workers per identical engine/version
         # and only select one worker per version.
         for w in select_engine_workers(matches, name):

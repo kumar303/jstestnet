@@ -9,12 +9,11 @@ from django.core.urlresolvers import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 from django.views.decorators.csrf import csrf_view_exempt
 
 from gevent import Greenlet
-import jingo
 from redis import Redis
 
 from common.decorators import json_view, post_required
@@ -41,7 +40,7 @@ def test_suites(request, test_suite_id=None, form=None):
         form = TestSuiteForm(instance=test_suite)
 
     data = dict(test_suites=test_suites, form=form, test_suite=test_suite)
-    return jingo.render(request, 'system/admin/index.html', data)
+    return render(request, 'system/admin/index.html', data)
 
 
 @staff_member_required
@@ -220,7 +219,7 @@ def status(request):
     data = dict(workers=(Worker.objects.filter(is_alive=True)
                          .exclude(last_heartbeat=None)),
                 test_suites=TestSuite.objects.all().order_by('name'))
-    return jingo.render(request, 'system/index.html', data)
+    return render(request, 'system/index.html', data)
 
 
 @staff_member_required
@@ -239,8 +238,8 @@ def debug_in_worker(request, worker_id):
     work_views.collect_garbage()
     worker = get_object_or_404(Worker, id=worker_id)
     # TODO check is_alive?
-    return jingo.render(request, 'system/admin/debug_in_worker.html',
-                        {'worker_id': worker_id})
+    return render(request, 'system/admin/debug_in_worker.html',
+                  {'worker_id': worker_id})
 
 
 def redis_client():

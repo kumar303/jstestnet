@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 import logging
 
 from django.db import transaction
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import loader, RequestContext
-
-import jingo
+from django.views.decorators.csrf import csrf_view_exempt
 
 from common.stdlib import json
 from common.decorators import json_view
@@ -21,6 +20,7 @@ def collect_garbage():
             last_heartbeat__lt=datetime.now()-timedelta(seconds=30)).delete()
 
 
+@csrf_view_exempt
 @json_view
 @transaction.commit_on_success()
 def query(request):
@@ -60,6 +60,7 @@ def query(request):
     }
 
 
+@csrf_view_exempt
 @json_view
 @transaction.commit_on_success()
 def submit_results(request):
@@ -93,6 +94,7 @@ def submit_results(request):
     }
 
 
+@csrf_view_exempt
 def work(request):
     collect_garbage()
     worker = Worker()
@@ -102,4 +104,4 @@ def work(request):
         ip = ip[0:200]
         worker.ip_address = ip
     worker.save()
-    return jingo.render(request, 'work/work.html', {'worker_id': worker.id})
+    return render(request, 'work/work.html', {'worker_id': worker.id})

@@ -116,3 +116,7 @@ PASSWORD_HASHERS = get_password_hashers(BASE_PASSWORD_HASHERS, HMAC_KEYS)
 
 LOGGING = dict(loggers=dict(playdoh = {'level': logging.DEBUG},
                             jstestnet = {'level': logging.INFO}))
+
+# When True, always provide CSRF protection for anonymous users.
+# This is required to get admin logins to work w/ django-session-csrf.
+ANON_ALWAYS = True

@@ -51,7 +51,7 @@ virtualenv_ and run::
 
 Make your own settings_local.py::
 
-  cp settings_local.py-example settings_local.py
+  cp jstestnet/settings/local.py-dist jstestnet/settings/local.py
 
 Set up a MySQL user and database::
 
@@ -59,14 +59,13 @@ Set up a MySQL user and database::
   create database jstestnet_dev;
   grant all on jstestnet_dev.* to jstestnet_dev;
 
-Then enter the credentials in settings_local.py::
+Then enter the credentials in ``settings/local.py``::
 
   DATABASES['default']['NAME'] = 'jstestnet_dev'
   DATABASES['default']['USER'] = 'jstestnet_dev'
   DATABASES['default']['PASSWORD'] = 'test'
 
-Also in settings_local.py, uncomment the ``HMAC_KEYS`` setting and enter some
-unique value.
+Also in settings/local.py, enter a unique random string for ``SECRET_KEY``.
 
 Create the database::
 
@@ -74,10 +73,17 @@ Create the database::
 
 During the process, you will be prompted to create a superuser. You should do
 so, or run the ``createsuperuser`` management command later.
+You'll need to login as a superuser in order to create new jobs.
 
 ::
 
   ./manage.py createsuperuser
+
+Collect static assets for installed apps (like the admin app).
+
+::
+
+  ./manage.py collectstatic
 
 Start the server and open the front page to see the system status.
 

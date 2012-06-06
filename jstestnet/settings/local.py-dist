@@ -43,12 +43,15 @@ DEBUG = TEMPLATE_DEBUG = True
 # instances and False on stage/prod.
 DEV = True
 
+# The default password hasher is sha512 which is probably fine.
+# Alternatively, you can configure something else here:
+
 # # Playdoh ships with sha512 password hashing by default. Bcrypt+HMAC is safer,
 # # so it is recommended. Please read <https://github.com/fwenzel/django-sha2#readme>,
 # # uncomment the bcrypt hasher and pick a secret HMAC key for your application.
 # BASE_PASSWORD_HASHERS = (
-#     'django_sha2.hashers.BcryptHMACCombinedPasswordVerifier',
 #     'django_sha2.hashers.SHA512PasswordHasher',
+#     'django_sha2.hashers.BcryptHMACCombinedPasswordVerifier',
 #     'django_sha2.hashers.SHA256PasswordHasher',
 #     'django.contrib.auth.hashers.SHA1PasswordHasher',
 #     'django.contrib.auth.hashers.MD5PasswordHasher',

@@ -2,8 +2,8 @@ import unittest
 
 from nose.tools import eq_, raises
 
-from system import useragent
-from system.useragent import parse_useragent
+from jstestnet.system import useragent
+from jstestnet.system.useragent import parse_useragent
 
 
 def _verify_ua(ua, expectation):

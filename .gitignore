@@ -4,7 +4,7 @@
 pip-log.txt
 .DS_Store
 *.db
-settings_local.py
+*/settings/local.py
 *-min.css
 *-all.css
 *-min.js

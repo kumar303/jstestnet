@@ -6,11 +6,11 @@ from django.core.urlresolvers import reverse
 from nose.tools import eq_, raises
 import test_utils
 
-from common.testutils import no_form_errors
-from system.models import TestSuite, Token
-from system.views import get_workers, NoWorkers, BrowserSpecError
-from work.models import TestRun, Worker
 from common.stdlib import json
+from common.testutils import no_form_errors
+from jstestnet.system.models import TestSuite, Token
+from jstestnet.system.views import get_workers, NoWorkers, BrowserSpecError
+from jstestnet.work.models import TestRun, Worker
 
 
 def create_ts(name=None):

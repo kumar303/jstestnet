@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import *
-from work import views
+from . import views
 
 urlpatterns = patterns('',
     url(r'^query$', views.query, name='work.query'),

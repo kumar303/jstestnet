@@ -9,7 +9,7 @@ import jingo
 
 from common.stdlib import json
 from common.decorators import json_view
-from work.models import Worker, WorkQueue, TestRun
+from .models import Worker, WorkQueue, TestRun
 
 
 log = logging.getLogger('jstestnet')

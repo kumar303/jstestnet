@@ -7,7 +7,7 @@ from django.conf.urls.defaults import *
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-    (r'^work/', include('work.urls')),
+    (r'^work/', include('jstestnet.work.urls')),
     # Note that /admin is used by system.urls
     (r'^admin-contrib/', include(admin.site.urls)),
 )
@@ -21,5 +21,5 @@ if settings.DEBUG:
     )
 
 urlpatterns += patterns('',
-    (r'', include('system.urls')),
+    (r'', include('jstestnet.system.urls')),
 )

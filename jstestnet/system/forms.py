@@ -1,7 +1,7 @@
 
 from django.forms import ModelForm
 
-from system.models import TestSuite, Token
+from jstestnet.system.models import TestSuite, Token
 
 class TestSuiteForm(ModelForm):
     class Meta:

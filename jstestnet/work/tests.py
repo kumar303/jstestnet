@@ -5,11 +5,11 @@ from django.core.urlresolvers import reverse
 from nose.tools import eq_, raises
 import test_utils
 
-from system.models import TestSuite, Token
-from work.models import Worker, WorkerEngine, TestRun, WorkQueue
-from work.views import collect_garbage
+from jstestnet.system.models import TestSuite, Token
+from jstestnet.system.useragent import parse_useragent
+from jstestnet.work.models import Worker, WorkerEngine, TestRun, WorkQueue
+from jstestnet.work.views import collect_garbage
 from common.stdlib import json
-from system.useragent import parse_useragent
 
 class TestWork(test_utils.TestCase):
 

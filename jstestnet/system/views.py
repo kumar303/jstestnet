@@ -19,10 +19,10 @@ from redis import Redis
 
 from common.decorators import json_view, post_required
 from common.stdlib import json
-from system.models import TestSuite, Token
-from system.forms import TestSuiteForm
-from work.models import Worker, WorkQueue, TestRun, TestRunQueue
-import work.views
+from jstestnet.work.models import Worker, WorkQueue, TestRun, TestRunQueue
+from jstestnet.work import views as work_views
+from .models import TestSuite, Token
+from .forms import TestSuiteForm
 
 
 log = logging.getLogger()
@@ -184,7 +184,7 @@ def start_tests(request):
         raise InvalidToken('Invalid or expired token sent to start_tests. '
                            'Contact an administrator.')
 
-    work.views.collect_garbage()
+    work_views.collect_garbage()
     # TODO(kumar) don't start a test suite if it's already running.
     test = TestRun(test_suite=ts, url=url)
     test.save()
@@ -206,7 +206,7 @@ def start_tests(request):
 @json_view
 @transaction.commit_on_success()
 def restart_workers(request):
-    work.views.collect_garbage()
+    work_views.collect_garbage()
     count = 0
     for worker in Worker.objects.filter(is_alive=True):
         worker.restart()
@@ -215,7 +215,7 @@ def restart_workers(request):
 
 
 def status(request):
-    work.views.collect_garbage()
+    work_views.collect_garbage()
 
     data = dict(workers=(Worker.objects.filter(is_alive=True)
                          .exclude(last_heartbeat=None)),
@@ -225,7 +225,7 @@ def status(request):
 
 @staff_member_required
 def start_remote_debugger(request, worker_id):
-    work.views.collect_garbage()
+    work_views.collect_garbage()
     worker = get_object_or_404(Worker, id=worker_id)
     worker.start_debugging()
     # TODO check is_alive?
@@ -236,7 +236,7 @@ def start_remote_debugger(request, worker_id):
 
 @staff_member_required
 def debug_in_worker(request, worker_id):
-    work.views.collect_garbage()
+    work_views.collect_garbage()
     worker = get_object_or_404(Worker, id=worker_id)
     # TODO check is_alive?
     return jingo.render(request, 'system/admin/debug_in_worker.html',

@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import *
-from system import views
+from . import views
 
 urlpatterns = patterns('',
     url(r'^restart_workers$', views.restart_workers,

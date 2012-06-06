@@ -2,9 +2,9 @@ import logging
 
 from django.db import models
 
-from system.models import TestSuite
 from common.stdlib import json
-from system.useragent import parse_useragent
+from jstestnet.system.models import TestSuite
+from jstestnet.system.useragent import parse_useragent
 
 
 log = logging.getLogger('jstestnet')

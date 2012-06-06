@@ -3,6 +3,7 @@
 .tox
 pip-log.txt
 .DS_Store
+build.py
 *.db
 */settings/local.py
 *-min.css

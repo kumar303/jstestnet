@@ -85,6 +85,10 @@ Collect static assets for installed apps (like the admin app).
 
   ./manage.py collectstatic
 
+If you're not in a local dev environment, compress JS and CSS assets::
+
+  ./manage.py compress_assets
+
 Start the server and open the front page to see the system status.
 
 ::

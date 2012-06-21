@@ -83,3 +83,6 @@ SECRET_KEY = ''
 # Common Event Format logging parameters
 #CEF_PRODUCT = 'Playdoh'
 #CEF_VENDOR = 'Mozilla'
+
+# Secure Session Cookies are good in prod
+# SESSION_COOKIE_SECURE = True

@@ -13,9 +13,6 @@ from django.shortcuts import render, render_to_response, get_object_or_404
 from django.template import loader, RequestContext
 from django.views.decorators.csrf import csrf_view_exempt
 
-from gevent import Greenlet
-from redis import Redis
-
 from common.decorators import json_view, post_required
 from common.stdlib import json
 from jstestnet.work.models import Worker, WorkQueue, TestRun, TestRunQueue
@@ -23,6 +20,9 @@ from jstestnet.work import views as work_views
 from .models import TestSuite, Token
 from .forms import TestSuiteForm
 
+if settings.USE_SOCKET_IO:
+    from gevent import Greenlet
+    from redis import Redis
 
 log = logging.getLogger()
 

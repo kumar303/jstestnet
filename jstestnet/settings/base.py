@@ -120,3 +120,8 @@ LOGGING = dict(loggers=dict(playdoh = {'level': logging.DEBUG},
 # When True, always provide CSRF protection for anonymous users.
 # This is required to get admin logins to work w/ django-session-csrf.
 ANON_ALWAYS = True
+
+# This is an experimental feature still in the works.
+# When this is True you need gevent and greenlet installed.
+# See compiled.txt.
+USE_SOCKET_IO = False

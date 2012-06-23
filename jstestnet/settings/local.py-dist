@@ -86,3 +86,16 @@ SECRET_KEY = ''
 
 # Secure Session Cookies are good in prod
 # SESSION_COOKIE_SECURE = True
+
+# Needed for CSFP tokens to work
+# Memcache Settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': [
+            'memcache01:11211',
+            'memcache02:11211',
+        ],
+        'KEY_PREFIX': 'jstestnet_dev',
+    }
+}

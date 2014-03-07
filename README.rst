@@ -13,6 +13,15 @@ test runners too.
 .. _Qunit: http://docs.jquery.com/Qunit
 .. _Jenkins: http://jenkins-ci.org/
 
+.. note::
+
+    This was a fun experiment but is no longer under development because
+    Django wasn't a good choice :) Check out `Karma`_ or `Yeti`_, both of
+    which are speedy alternatives with more features!
+
+.. _Karma: http://karma-runner.github.io/
+.. _Yeti: http://yeti.cx/
+
 .. contents::
       :local:
 
